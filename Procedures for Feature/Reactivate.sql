@@ -6,7 +6,7 @@ BEGIN
 	  FROM FEATURE
 	 WHERE FEATURE.feature_id = ip_feature.feature_id;
 	 
-	//* **********************************************
+	/* **********************************************
 	 THE PLACE FOR CHECKS WHICH THROW EXCEPTIONS
 	 ********************************************** */
 	CASE

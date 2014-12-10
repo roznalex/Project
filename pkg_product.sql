@@ -1,21 +1,21 @@
 /* pkg_product  */
-CREATE PACKAGE product_pkg AS
-	PROCEDURE p_add_pending_approval(ip_product IN T_PRODUCT);
-	PROCEDURE p_amend(ip_product IN T_PRODUCT);
-	PROCEDURE p_approve(ip_product IN T_PRODUCT);
-	PROCEDURE p_reject(ip_product IN T_PRODUCT);
-	PROCEDURE p_discard(ip_product IN T_PRODUCT);
-	PROCEDURE p_deactivate(ip_product IN T_PRODUCT);
-	PROCEDURE p_reactivate(ip_product IN T_PRODUCT);
-END product_pkg;
+CREATE PACKAGE pkg_product AS
+	 PROCEDURE p_add_pending_approval(ip_product IN T_PRODUCT);
+	 PROCEDURE p_amend(ip_product IN T_PRODUCT);
+	 PROCEDURE p_approve(ip_product IN T_PRODUCT);
+	 PROCEDURE p_reject(ip_product IN T_PRODUCT);
+	 PROCEDURE p_discard(ip_product IN T_PRODUCT);
+	 PROCEDURE p_deactivate(ip_product IN T_PRODUCT);
+	 PROCEDURE p_reactivate(ip_product IN T_PRODUCT);
+END pkg_product;
 
-CREATE PACKAGE BODY product_pkg_PD AS
+CREATE PACKAGE BODY pkg_product AS
 	CREATE SEQUENCE seq_prod_product_id
 		INCREMENT BY 1
 		START WITH 1
 		CACHE 20;
 
-CREATE PACKAGE BODY product_pkg_PD AS		
+CREATE PACKAGE BODY pkg_product AS		
 	CREATE SEQUENCE seq_prod_group_id
 		INCREMENT BY 1
 		START WITH 1
