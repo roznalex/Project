@@ -10,6 +10,12 @@ BEGIN
 	/* **********************************************
 	 THE PLACE FOR CHECKS WHICH THROW EXCEPTIONS
 	 ********************************************** */
+	CASE
+		WHEN SQL%NOTFOUND THEN RAISE NO_DATA_FOUND
+	END;
+	/* **********************************************
+	 ////////////////////////////////////////////////
+	 ********************************************** */
 	
 	IF    v_feature.status_id = /* PENDING_APPROVAL_ID */ THEN
 		v_state = T_STATE(1,1,1,/* APPROVED_ID */,/* APPROVE */);
@@ -59,5 +65,10 @@ BEGIN
 EXCEPTION
 	/* **********************************************
 	 THE PLACE FOR EXCEPTIONS
+	 ********************************************** */
+	WHEN NO_DATA_FOUND THEN
+		RAISE_APPLICATION_ERROR(/* ERROR CODE */,/* ERROR TEXT */);
+	/* **********************************************
+	 ////////////////////////////////////////////////
 	 ********************************************** */
 END p_approve;

@@ -1,4 +1,4 @@
-/* feature_pkg  */
+/* pkg_feature  */
 CREATE PACKAGE pkg_feature AS
 	 PROCEDURE p_add_pending_approval(ip_feature IN T_FEATURE);
 	 PROCEDURE p_amend(ip_feature IN T_FEATURE);
@@ -27,6 +27,12 @@ PROCEDURE p_add_pending_approval(ip_feature IN T_FEATURE) IS
 BEGIN	 
 	/* **********************************************
 	 THE PLACE FOR CHECKS WHICH THROW EXCEPTIONS
+	 ********************************************** */
+	CASE
+		WHEN /* FAILED CHECK */ THEN RAISE /* EXCEPTION */
+	END;
+	/* **********************************************
+	 ////////////////////////////////////////////////
 	 ********************************************** */
 	 
 	v_state = T_STATE(0,1,0,/* PENDING_APPROVAL_ID */,/* ADD_PENDING_APPROVAL */);
@@ -57,6 +63,11 @@ EXCEPTION
 	/* **********************************************
 	 THE PLACE FOR EXCEPTIONS
 	 ********************************************** */
+	WHEN /* EXCEPTION */ THEN
+		RAISE_APPLICATION_ERROR(/* ERROR CODE */,/* ERROR TEXT */);
+	/* **********************************************
+	 ////////////////////////////////////////////////
+	 ********************************************** */
 END p_add_pending_approval;
 
 /* p_amend */
@@ -70,6 +81,12 @@ BEGIN
 	 
 	/* **********************************************
 	 THE PLACE FOR CHECKS WHICH THROW EXCEPTIONS
+	 ********************************************** */
+	CASE
+		WHEN SQL%NOTFOUND THEN RAISE NO_DATA_FOUND
+	END;
+	/* **********************************************
+	 ////////////////////////////////////////////////
 	 ********************************************** */
 	
 	IF    v_feature.status_id = /* APPROVED_ID */ THEN
@@ -113,6 +130,11 @@ EXCEPTION
 	/* **********************************************
 	 THE PLACE FOR EXCEPTIONS
 	 ********************************************** */
+	WHEN NO_DATA_FOUND THEN
+		RAISE_APPLICATION_ERROR(/* ERROR CODE */,/* ERROR TEXT */);
+	/* **********************************************
+	 ////////////////////////////////////////////////
+	 ********************************************** */
 END p_amend;
 
 /* p_approve */
@@ -127,6 +149,12 @@ BEGIN
 	 
 	/* **********************************************
 	 THE PLACE FOR CHECKS WHICH THROW EXCEPTIONS
+	 ********************************************** */
+	CASE
+		WHEN SQL%NOTFOUND THEN RAISE NO_DATA_FOUND
+	END;
+	/* **********************************************
+	 ////////////////////////////////////////////////
 	 ********************************************** */
 	
 	IF    v_feature.status_id = /* PENDING_APPROVAL_ID */ THEN
@@ -178,6 +206,11 @@ EXCEPTION
 	/* **********************************************
 	 THE PLACE FOR EXCEPTIONS
 	 ********************************************** */
+	WHEN NO_DATA_FOUND THEN
+		RAISE_APPLICATION_ERROR(/* ERROR CODE */,/* ERROR TEXT */);
+	/* **********************************************
+	 ////////////////////////////////////////////////
+	 ********************************************** */
 END p_approve;
 
 /* p_reject */
@@ -193,6 +226,12 @@ BEGIN
 	 
 	/* **********************************************
 	 THE PLACE FOR CHECKS WHICH THROW EXCEPTIONS
+	 ********************************************** */
+	CASE
+		WHEN SQL%NOTFOUND THEN RAISE NO_DATA_FOUND
+	END;
+	/* **********************************************
+	 ////////////////////////////////////////////////
 	 ********************************************** */
 	
 	IF    v_feature.status_id = /* PENDING_APPROVAL_ID */ AND v_feature.was_published = 0 THEN
@@ -240,13 +279,25 @@ BEGIN
 		 WHERE FEATURE.feature_id = ip_feature.feature_id;
 	END IF;
 	
-	UPDATE FEATURE
-	   SET FEATURE.last_record = 0
-	 WHERE FEATURE.feature_id = ip_feature.feature_id;
+	IF v_feature.status_id = /* APPROVED_ID */ THEN
+		UPDATE FEATURE
+		   SET FEATURE.last_record = 0
+		   SET FEATURE.publish = 0
+		 WHERE FEATURE.feature_id = ip_feature.feature_id;
+	ELSE
+		UPDATE FEATURE
+		   SET FEATURE.last_record = 0
+		 WHERE FEATURE.feature_id = ip_feature.feature_id;
+	END IF;
 	 
 EXCEPTION
 	/* **********************************************
 	 THE PLACE FOR EXCEPTIONS
+	 ********************************************** */
+	WHEN NO_DATA_FOUND THEN
+		RAISE_APPLICATION_ERROR(/* ERROR CODE */,/* ERROR TEXT */);
+	/* **********************************************
+	 ////////////////////////////////////////////////
 	 ********************************************** */
 END p_reject;
 
@@ -263,6 +314,12 @@ BEGIN
 	 
 	/* **********************************************
 	 THE PLACE FOR CHECKS WHICH THROW EXCEPTIONS
+	 ********************************************** */
+	CASE
+		WHEN SQL%NOTFOUND THEN RAISE NO_DATA_FOUND
+	END;
+	/* **********************************************
+	 ////////////////////////////////////////////////
 	 ********************************************** */
 	
 	IF    v_feature.status_id = /* PENDING_APPROVAL_ID */ AND v_feature.was_published = 0 THEN
@@ -313,13 +370,25 @@ BEGIN
 		 WHERE FEATURE.feature_id = ip_feature.feature_id;
 	END IF;
 	
-	UPDATE FEATURE
-	   SET FEATURE.last_record = 0
-	 WHERE FEATURE.feature_id = ip_feature.feature_id;
+	IF v_feature.status_id = /* APPROVED_ID */ THEN
+		UPDATE FEATURE
+		   SET FEATURE.last_record = 0
+		   SET FEATURE.publish = 0
+		 WHERE FEATURE.feature_id = ip_feature.feature_id;
+	ELSE
+		UPDATE FEATURE
+		   SET FEATURE.last_record = 0
+		 WHERE FEATURE.feature_id = ip_feature.feature_id;
+	END IF;
 	 
 EXCEPTION
 	/* **********************************************
 	 THE PLACE FOR EXCEPTIONS
+	 ********************************************** */
+	WHEN NO_DATA_FOUND THEN
+		RAISE_APPLICATION_ERROR(/* ERROR CODE */,/* ERROR TEXT */);
+	/* **********************************************
+	 ////////////////////////////////////////////////
 	 ********************************************** */
 END p_discard;
 
@@ -334,6 +403,12 @@ BEGIN
 	 
 	/* **********************************************
 	 THE PLACE FOR CHECKS WHICH THROW EXCEPTIONS
+	 ********************************************** */
+	CASE
+		WHEN SQL%NOTFOUND THEN RAISE NO_DATA_FOUND
+	END;
+	/* **********************************************
+	 ////////////////////////////////////////////////
 	 ********************************************** */
 	
 	IF v_feature.status_id = /* PENDING_DEACTIVATION_ID */ THEN
@@ -371,6 +446,11 @@ EXCEPTION
 	/* **********************************************
 	 THE PLACE FOR EXCEPTIONS
 	 ********************************************** */
+	WHEN NO_DATA_FOUND THEN
+		RAISE_APPLICATION_ERROR(/* ERROR CODE */,/* ERROR TEXT */);
+	/* **********************************************
+	 ////////////////////////////////////////////////
+	 ********************************************** */
 END p_deactivate;
 
 /* p_reactivate */
@@ -384,6 +464,12 @@ BEGIN
 	 
 	/* **********************************************
 	 THE PLACE FOR CHECKS WHICH THROW EXCEPTIONS
+	 ********************************************** */
+	CASE
+		WHEN SQL%NOTFOUND THEN RAISE NO_DATA_FOUND
+	END;
+	/* **********************************************
+	 ////////////////////////////////////////////////
 	 ********************************************** */
 	
 	IF v_feature.status_id = /* DEACTIVATED_ID */ THEN
@@ -420,5 +506,10 @@ BEGIN
 EXCEPTION
 	/* **********************************************
 	 THE PLACE FOR EXCEPTIONS
+	 ********************************************** */
+	WHEN NO_DATA_FOUND THEN
+		RAISE_APPLICATION_ERROR(/* ERROR CODE */,/* ERROR TEXT */);
+	/* **********************************************
+	 ////////////////////////////////////////////////
 	 ********************************************** */
 END p_reactivate;

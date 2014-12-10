@@ -6,8 +6,14 @@ BEGIN
 	  FROM FEATURE
 	 WHERE FEATURE.feature_id = ip_feature.feature_id;
 	 
-	/* **********************************************
+	//* **********************************************
 	 THE PLACE FOR CHECKS WHICH THROW EXCEPTIONS
+	 ********************************************** */
+	CASE
+		WHEN SQL%NOTFOUND THEN RAISE NO_DATA_FOUND
+	END;
+	/* **********************************************
+	 ////////////////////////////////////////////////
 	 ********************************************** */
 	
 	IF v_feature.status_id = /* DEACTIVATED_ID */ THEN
@@ -44,5 +50,10 @@ BEGIN
 EXCEPTION
 	/* **********************************************
 	 THE PLACE FOR EXCEPTIONS
+	 ********************************************** */
+	WHEN NO_DATA_FOUND THEN
+		RAISE_APPLICATION_ERROR(/* ERROR CODE */,/* ERROR TEXT */);
+	/* **********************************************
+	 ////////////////////////////////////////////////
 	 ********************************************** */
 END p_reactivate;
