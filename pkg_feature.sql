@@ -7,7 +7,7 @@ CREATE PACKAGE pkg_feature AS
 	 PROCEDURE p_discard(ip_feature IN T_FEATURE);
 	 PROCEDURE p_deactivate(ip_feature IN T_FEATURE);
 	 PROCEDURE p_reactivate(ip_feature IN T_FEATURE);
-END feature_pkg;
+END pkg_feature;
 
 CREATE PACKAGE BODY pkg_feature AS
 	CREATE SEQUENCE seq_feat_feature_id
