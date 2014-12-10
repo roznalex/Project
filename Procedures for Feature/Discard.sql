@@ -60,9 +60,16 @@ BEGIN
 		 WHERE FEATURE.feature_id = ip_feature.feature_id;
 	END IF;
 	
-	UPDATE FEATURE
-	   SET FEATURE.last_record = 0
-	 WHERE FEATURE.feature_id = ip_feature.feature_id;
+	IF v_feature.status_id = /* APPROVED_ID */ THEN
+		UPDATE FEATURE
+		   SET FEATURE.last_record = 0
+		   SET FEATURE.publish = 0
+		 WHERE FEATURE.feature_id = ip_feature.feature_id;
+	ELSE
+		UPDATE FEATURE
+		   SET FEATURE.last_record = 0
+		 WHERE FEATURE.feature_id = ip_feature.feature_id;
+	END IF;
 	 
 EXCEPTION
 	/* **********************************************
