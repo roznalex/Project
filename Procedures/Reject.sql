@@ -1,0 +1,68 @@
+CREATE OR REPLACE PROCEDURE p_reject(ip_feature IN T_FEATURE) IS
+	v_feature                    T_FEATURE;
+	v_state                      T_STATE;
+	RETURN_TO_THE_LAST_PUBLISHED BOOLEAN DEFAULT FALSE;
+	v_id_of_last_published       NUMBER;
+BEGIN
+	SELECT * INTO v_feature
+	  FROM FEATURE
+	 WHERE FEATURE.feature_id = ip_feature.feature_id;
+	 
+	/* **********************************************
+	 THE PLACE FOR CHECKS WHICH THROW EXCEPTIONS
+	 ********************************************** */
+	
+	IF    v_feature.status_id = /* PENDING_APPROVAL_ID */ AND v_feature.was_published = 0 THEN
+		v_state = T_STATE(0,1,0,/* REJECTED_ID */,/* REJECT */);
+	ELSIF v_feature.status_id = /* PENDING_APPROVAL_ID */ AND v_feature.was_published = 1 THEN
+		v_state = T_STATE(1,1,1,/* APPROVED_ID */,/* REJECT */);
+		RETURN_TO_THE_LAST_PUBLISHED := TRUE;
+	ELSIF v_feature.status_id = /* APPROVED_ID */ THEN
+		v_state = T_STATE(0,1,1,/* PENDING_APPROVAL_ID */,/* REJECT */);
+	END IF;
+	
+	IF RETURN_TO_THE_LAST_PUBLISHED THEN
+		SELECT FEATURE.feature_id INTO v_id_of_last_published
+		  FROM FEATURE
+		 WHERE FEATURE.group_id  = ip_feature.group_id
+		   AND FEATURE.publish = 1
+		   AND FEATURE.status_id = v_state.status_id;
+		
+		UPDATE FEATURE
+		   SET FEATURE.last_record = v_state.last_record
+		       FEATURE.last_action_id = v_state.last_action_id
+		 WHERE FEATURE.feature_id = v_id_of_last_published;
+	ELSE
+		INSERT INTO FEATURE
+		VALUES(seq_feat_feature_id.NEXTVAL,
+			   FEATURE.group_id,
+			   FEATURE.feature_type_id, 
+			   FEATURE.feature_value, 
+			   FEATURE.description, 
+			   FEATURE.valid_start_date,
+			   v_state.status_id,
+			   v_state.last_action_id,
+			   v_state.publish,
+			   v_state.last_record,
+			   FEATURE.linked,
+			   v_state.was_published,
+			   FEATURE.comments,
+			   FEATURE.active_flag,
+			   USER,
+			   CURRENT_DATE,
+			   FEATURE.created_by,
+			   FEATURE.created_date,
+			   FEATURE.is_default,
+			   FEATURE.is_editable)
+		 WHERE FEATURE.feature_id = ip_feature.feature_id;
+	END IF;
+	
+	UPDATE FEATURE
+	   SET FEATURE.last_record = 0
+	 WHERE FEATURE.feature_id = ip_feature.feature_id;
+	 
+EXCEPTION
+	/* **********************************************
+	 THE PLACE FOR EXCEPTIONS
+	 ********************************************** */
+END p_reject;
