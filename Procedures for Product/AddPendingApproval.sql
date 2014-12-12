@@ -42,13 +42,20 @@ BEGIN
 		INSERT INTO LNK_PRODUCT_FEATURE
 		VALUES(seq_lnk_prod_feat_id.NEXTVAL,
 			   ip_product.product_id,
-			   ip_lnk_feature(i),
+			   ip_lnk_feature(i).feature_id,
 			   ip_product.active_flag,
 			   USER,
 			   CURRENT_DATE,
 			   USER,
 			   CURRENT_DATE);
+		
+		UPDATE FEATURE
+		   SET FEATURE.linked = 1
+		 WHERE FEATURE.feature_id =  ip_lnk_feature(i).feature_id,
+		   AND FEATURE.linked = 0;
 	END LOOP;
+	
+	
 	
 EXCEPTION
 	/* **********************************************
