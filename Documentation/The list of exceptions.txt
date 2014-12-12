@@ -1,0 +1,12 @@
+        	NAME			|	  CODE		|	  			TEXT				|
+____________________________|_______________|___________________________________|
+												You are not able to use this
+	NOT_APPROPRIATE_STATUS		  10001			system action with current
+												status of the entity
+________________________________________________________________________________
+	
+	EXC_LINKED_FEATURE			  10002			You are not able to amend or
+												refuse this feature: it is
+												linked to a product at the
+												moment
+________________________________________________________________________________
