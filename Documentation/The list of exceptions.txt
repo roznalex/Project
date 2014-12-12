@@ -1,12 +1,8 @@
-        	NAME			|	  CODE		|	  			TEXT				|
-____________________________|_______________|___________________________________|
-												You are not able to use this
-	NOT_APPROPRIATE_STATUS		  10001			system action with current
-												status of the entity
-________________________________________________________________________________
-	
-	EXC_LINKED_FEATURE			  10002			You are not able to amend or
-												refuse this feature: it is
-												linked to a product at the
-												moment
-________________________________________________________________________________
+Дорогі друзі, Я хотів би зробит щось краще і приємніше для ока, але на жаль, це на даний момент єдине, 
+до чого Я додумався щоб нормально синхронізувати роботу при одночаному додаванню нових виключень. Структура така:
+Назва | Код вилючення | Текст
+/* --------------------------------------------------------- */
+NOT_APPROPRIATE_STATUS	| 10001 | You are not able to use this system action with current status of the entity
+/* --------------------------------------------------------- */
+EXC_LINKED_FEATURE | 10002 | You are not able to amend or refuse this feature: it is linked to a product at the moment
+/* --------------------------------------------------------- */
