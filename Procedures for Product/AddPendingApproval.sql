@@ -1,6 +1,9 @@
-CREATE OR REPLACE PROCEDURE p_add_pending_approval(ip_product IN T_PRODUCT, ip_lnk_feature IN OUT T_LNK_FEATURE) IS
+CREATE OR REPLACE PROCEDURE p_add_pending_approval(ip_product IN T_PRODUCT, ip_lnk_feature IN OUT TBL_LNK_FEATURE) IS
 	v_state   T_STATE;
 BEGIN	 
+
+	p_fill_empty_lnk_feature(ip_lnk_feature);
+	
 	/* **********************************************
 	 THE PLACE FOR CHECKS WHICH THROW EXCEPTIONS
 	 ********************************************** */

@@ -1,15 +1,13 @@
-CREATE OR REPLACE PROCEDURE p_fill_empty_lnk_feature(ip_lnk_feature IN OUT T_LNK_FEATURE) IS
+CREATE OR REPLACE PROCEDURE p_fill_empty_lnk_feature(ip_lnk_feature IN OUT TBL_LNK_FEATURE) IS
 	CURSOR v_act_def_feature IS
 		SELECT FEATURE.feature_id, FEATURE.feature_type_id 
 		  FROM FEATURE
 		 WHERE FEATURE.active_flag = 1
 		   AND FEATURE.is_default = 1
-		   AND FEATURE.last_record = 1;
-		 
-	TYPE T_DESCR_FEATURE AS TABLE OF NUMBER, NUMBER;	 
-	v_list_given_feature_type_id  T_DESCR_FEATURE;
-	v_list_active_feature_type_id T_DESCR_FEATURE;
-	v_list_default_feature_id     T_LNK_FEATURE;
+		   AND FEATURE.last_record = 1
+		   AND FEATURE.status_id = /* APPROVED */;	 
+
+	v_list_active_feature_type_id TBL_LNK_FEATURE;
 BEGIN	 
 	/* **********************************************
 	 THE PLACE FOR CHECKS WHICH THROW EXCEPTIONS
