@@ -33,7 +33,7 @@ BEGIN
 		   USER,
 		   CURRENT_DATE,
 		   ip_feature.is_default,
-		   ip_feature.is_editable)
+		   ip_feature.is_editable);
 	 
 EXCEPTION
 	/* **********************************************

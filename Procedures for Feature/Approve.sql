@@ -43,8 +43,7 @@ BEGIN
 		   FEATURE.created_by,
 		   FEATURE.created_date,
 		   FEATURE.is_default,
-		   FEATURE.is_editable)
-	 WHERE FEATURE.feature_id = ip_feature.feature_id;
+		   FEATURE.is_editable);
 	
 	UPDATE FEATURE
 	   SET FEATURE.last_record = 0

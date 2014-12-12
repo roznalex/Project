@@ -10,6 +10,12 @@ BEGIN
 	/* **********************************************
 	 THE PLACE FOR CHECKS WHICH THROW EXCEPTIONS
 	 ********************************************** */
+	CASE
+		WHEN SQL%NOTFOUND THEN RAISE NO_DATA_FOUND
+	END;
+	/* **********************************************
+	 ////////////////////////////////////////////////
+	 ********************************************** */
 	
 	IF    v_product.status_id = /* PENDING_APPROVAL_ID */ THEN
 		v_state = T_STATE(1,1,1,/* APPROVED_ID */,/* APPROVE */);
@@ -36,8 +42,7 @@ BEGIN
 		   USER,
 		   CURRENT_DATE,
 		   PRODUCT.created_by,
-		   PRODUCT.created_date)
-	 WHERE PRODUCT.product_id = product.product_id;
+		   PRODUCT.created_date);
 	
 	UPDATE PRODUCT
 	   SET PRODUCT.last_record = 0
@@ -51,12 +56,17 @@ BEGIN
 		   AND PRODUCT.status_id = /* APPROVED_ID */;
 		
 		UPDATE PRODUCT
-	   SET PRODUCT.last_record = 0
-	 WHERE PRODUCT.product_id = v_id_of_last_published;
+	       SET PRODUCT.last_record = 0
+	     WHERE PRODUCT.product_id = v_id_of_last_published;
 	END IF;
 	 
 EXCEPTION
 	/* **********************************************
 	 THE PLACE FOR EXCEPTIONS
+	 ********************************************** */
+	WHEN NO_DATA_FOUND THEN
+		RAISE_APPLICATION_ERROR(/* ERROR CODE */,/* ERROR TEXT */);
+	/* **********************************************
+	 ////////////////////////////////////////////////
 	 ********************************************** */
 END p_approve;

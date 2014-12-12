@@ -62,8 +62,7 @@ BEGIN
 			   FEATURE.created_by,
 			   FEATURE.created_date,
 			   FEATURE.is_default,
-			   FEATURE.is_editable)
-		 WHERE FEATURE.feature_id = ip_feature.feature_id;
+			   FEATURE.is_editable);
 	END IF;
 	
 	IF v_feature.status_id = /* APPROVED_ID */ THEN

@@ -60,7 +60,6 @@ BEGIN
 			   FEATURE.created_date,
 			   FEATURE.is_default,
 			   FEATURE.is_editable)
-		 WHERE FEATURE.feature_id = ip_feature.feature_id;
 	END IF;
 	
 	IF v_feature.status_id = /* APPROVED_ID */ THEN

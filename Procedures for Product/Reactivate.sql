@@ -9,6 +9,12 @@ BEGIN
 	/* **********************************************
 	 THE PLACE FOR CHECKS WHICH THROW EXCEPTIONS
 	 ********************************************** */
+	CASE
+		WHEN SQL%NOTFOUND THEN RAISE NO_DATA_FOUND
+	END;
+	/* **********************************************
+	 ////////////////////////////////////////////////
+	 ********************************************** */
 	
 	IF v_product.status_id = /* DEACTIVATED_ID */ THEN
 		v_state = T_STATE(0,1,1,/* PENDING_APPROVAL_ID */,/* REACTIVATE */);
@@ -33,8 +39,7 @@ BEGIN
 		   USER,
 		   CURRENT_DATE,
 		   PRODUCT.created_by,
-		   PRODUCT.created_date)
-	 WHERE PRODUCT.product_id = product.product_id;
+		   PRODUCT.created_date);
 	
 	UPDATE PRODUCT
 	   SET PRODUCT.last_record = 0
@@ -43,5 +48,10 @@ BEGIN
 EXCEPTION
 	/* **********************************************
 	 THE PLACE FOR EXCEPTIONS
+	 ********************************************** */
+	WHEN NO_DATA_FOUND THEN
+		RAISE_APPLICATION_ERROR(/* ERROR CODE */,/* ERROR TEXT */);
+	/* **********************************************
+	 ////////////////////////////////////////////////
 	 ********************************************** */
 END p_reactivate;

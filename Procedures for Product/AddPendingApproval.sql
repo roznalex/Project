@@ -1,10 +1,16 @@
-CREATE OR REPLACE PROCEDURE p_add_pending_approval(ip_product IN T_PRODUCT) IS
+CREATE OR REPLACE PROCEDURE p_add_pending_approval(ip_product IN T_PRODUCT, ip_lnk_feature IN OUT T_LNK_FEATURE) IS
 	v_state   T_STATE;
 BEGIN	 
 	/* **********************************************
 	 THE PLACE FOR CHECKS WHICH THROW EXCEPTIONS
 	 ********************************************** */
-	 
+	CASE
+		WHEN /* FAILED CHECK */ THEN RAISE /* EXCEPTION */
+	END;
+	/* **********************************************
+	 ////////////////////////////////////////////////
+	 ********************************************** */
+		 
 	v_state = T_STATE(0,1,0,/* PENDING_APPROVAL_ID */,/* ADD_PENDING_APPROVAL */);
 
 	INSERT INTO PRODUCT
@@ -26,11 +32,28 @@ BEGIN
 		   USER,
 		   CURRENT_DATE,
 		   USER,
-		   CURRENT_DATE)
-	 WHERE PRODUCT.product_id = ip_product.product_id;
+		   CURRENT_DATE);
 	 
+	FOR i IN ip_lnk_feature.FIRST..ip_lnk_feature.LAST
+	LOOP
+		INSERT INTO LNK_PRODUCT_FEATURE
+		VALUES(seq_lnk_prod_feat_id.NEXTVAL,
+			   ip_product.product_id,
+			   ip_lnk_feature(i),
+			   ip_product.active_flag,
+			   USER,
+			   CURRENT_DATE,
+			   USER,
+			   CURRENT_DATE);
+	END LOOP;
+	
 EXCEPTION
 	/* **********************************************
 	 THE PLACE FOR EXCEPTIONS
+	 ********************************************** */
+	WHEN /* EXCEPTION */ THEN
+		RAISE_APPLICATION_ERROR(/* ERROR CODE */,/* ERROR TEXT */);
+	/* **********************************************
+	 ////////////////////////////////////////////////
 	 ********************************************** */
 END p_add_pending_approval;

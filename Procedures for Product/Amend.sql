@@ -1,4 +1,4 @@
-CREATE OR REPLACE PROCEDURE p_amend(ip_product IN T_PRODUCT) IS
+CREATE OR REPLACE PROCEDURE p_amend(ip_product IN T_PRODUCT, ip_lnk_feature IN T_LNK_FEATURE) IS
 	v_product T_PRODUCT;
 	v_state   T_STATE;
 BEGIN
@@ -8,6 +8,12 @@ BEGIN
 	 
 	/* **********************************************
 	 THE PLACE FOR CHECKS WHICH THROW EXCEPTIONS
+	 ********************************************** */
+	CASE
+		WHEN SQL%NOTFOUND THEN RAISE NO_DATA_FOUND
+	END;
+	/* **********************************************
+	 ////////////////////////////////////////////////
 	 ********************************************** */
 	
 	IF    v_product.status_id = /* APPROVED_ID */ THEN
@@ -39,8 +45,7 @@ BEGIN
 		   USER,
 		   CURRENT_DATE,
 		   PRODUCT.created_by,
-		   PRODUCT.created_date)
-	 WHERE PRODUCT.product_id = product.product_id;
+		   PRODUCT.created_date);
 	
 	UPDATE PRODUCT
 	   SET PRODUCT.last_record = 0
@@ -49,5 +54,10 @@ BEGIN
 EXCEPTION
 	/* **********************************************
 	 THE PLACE FOR EXCEPTIONS
+	 ********************************************** */
+	WHEN NO_DATA_FOUND THEN
+		RAISE_APPLICATION_ERROR(/* ERROR CODE */,/* ERROR TEXT */);
+	/* **********************************************
+	 ////////////////////////////////////////////////
 	 ********************************************** */
 END p_amend;
