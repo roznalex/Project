@@ -4,7 +4,26 @@ CREATE OR REPLACE PROCEDURE p_discard(ip_product IN T_PRODUCT) IS
 	RETURN_TO_THE_LAST_PUBLISHED BOOLEAN DEFAULT FALSE;
 	v_id_of_last_published       NUMBER;
 BEGIN
-	SELECT * INTO v_product
+	SELECT T_PRODUCT(product_id,
+					 group_id,
+					 product_uid,
+					 product_name,
+					 product_long_name,
+					 description,
+					 valid_start_date,
+					 status_id,
+					 last_action_id,
+					 publish,
+					 last_record,
+					 linked,
+					 was_published,
+					 comments,
+					 active_flag,
+					 last_modified_by,
+					 last_modified_date,
+					 created_by,
+					 created_date,
+					 NULL) INTO v_product
 	  FROM PRODUCT
 	 WHERE PRODUCT.product_id = ip_product.product_id;
 	 

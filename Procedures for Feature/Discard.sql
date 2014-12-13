@@ -4,7 +4,26 @@ CREATE OR REPLACE PROCEDURE p_discard(ip_feature IN T_FEATURE) IS
 	RETURN_TO_THE_LAST_PUBLISHED BOOLEAN DEFAULT FALSE;
 	v_id_of_last_published       NUMBER;
 BEGIN
-	SELECT * INTO v_feature
+	SELECT T_FEATURE(feature_id,
+					 group_id,
+					 feature_type_id,
+					 feature_value,
+					 description,
+					 valid_start_date,
+					 status_id,
+					 last_action_id,
+					 publish,
+					 last_record,
+					 linked,
+					 was_published,
+					 comments,
+					 active_flag,
+					 last_modified_by,
+					 last_modified_date,
+					 created_by,
+					 created_date,
+					 is_default,
+					 is_editable) INTO v_feature
 	  FROM FEATURE
 	 WHERE FEATURE.feature_id = ip_feature.feature_id;
 	 

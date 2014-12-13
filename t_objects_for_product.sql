@@ -24,7 +24,8 @@ CREATE OR REPLACE TYPE T_PRODUCT AS OBJECT
 	 last_modified_by   VARCHAR2(200),
 	 last_modified_date TIMESTAMP(6) WITH LOCAL TIMEZONE,
 	 created_by         VARCHAR2(200),
-	 created_date       TIMESTAMP(6) WITH LOCAL TIMEZONE);
+	 created_date       TIMESTAMP(6) WITH LOCAL TIMEZONE
+	 lnk_feature		TBL_LNK_FEATURE);
 
 CREATE OR REPLACE TYPE T_LNK_FEATURE AS OBJECT
 	(feature_id			NUMBER,
