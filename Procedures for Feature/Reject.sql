@@ -4,7 +4,26 @@ CREATE OR REPLACE PROCEDURE p_reject(ip_feature IN T_FEATURE) IS
 	RETURN_TO_THE_LAST_PUBLISHED BOOLEAN DEFAULT FALSE;
 	v_id_of_last_published       NUMBER;
 BEGIN
-	SELECT * INTO v_feature
+	SELECT T_FEATURE(feature_id,
+					 group_id,
+					 feature_type_id,
+					 feature_value,
+					 description,
+					 valid_start_date,
+					 status_id,
+					 last_action_id,
+					 publish,
+					 last_record,
+					 linked,
+					 was_published,
+					 comments,
+					 active_flag,
+					 last_modified_by,
+					 last_modified_date,
+					 created_by,
+					 created_date,
+					 is_default,
+					 is_editable) INTO v_feature
 	  FROM FEATURE
 	 WHERE FEATURE.feature_id = ip_feature.feature_id;
 	 
@@ -23,8 +42,6 @@ BEGIN
 	ELSIF v_feature.status_id = /* PENDING_APPROVAL_ID */ AND v_feature.was_published = 1 THEN
 		v_state = T_STATE(1,1,1,/* APPROVED_ID */,/* REJECT */);
 		RETURN_TO_THE_LAST_PUBLISHED := TRUE;
-	ELSIF v_feature.status_id = /* APPROVED_ID */ THEN
-		v_state = T_STATE(0,1,1,/* PENDING_APPROVAL_ID */,/* REJECT */);
 	END IF;
 	
 	IF RETURN_TO_THE_LAST_PUBLISHED THEN

@@ -1,8 +1,6 @@
-CREATE OR REPLACE PROCEDURE p_add_pending_approval(ip_product IN T_PRODUCT, ip_lnk_feature IN OUT TBL_LNK_FEATURE) IS
+CREATE OR REPLACE PROCEDURE p_add_pending_approval(ip_product IN T_PRODUCT) IS
 	v_state   T_STATE;
 BEGIN	 
-
-	p_fill_empty_lnk_feature(ip_lnk_feature);
 	
 	/* **********************************************
 	 THE PLACE FOR CHECKS WHICH THROW EXCEPTIONS
@@ -19,7 +17,7 @@ BEGIN
 	INSERT INTO PRODUCT
 	VALUES(seq_prod_product_id.NEXTVAL,
 		   seq_prod_group_id.NEXTVAL,
-		   PRODUCT.product_uid, /*????*/
+		   PRODUCT.product_uid,
 		   ip_product.product_name, 
 		   ip_product.product_long_name,
 		   ip_product.description,
@@ -37,12 +35,12 @@ BEGIN
 		   USER,
 		   CURRENT_DATE);
 	 
-	FOR i IN ip_lnk_feature.FIRST..ip_lnk_feature.LAST
+	FOR i IN ip_product.lnk_feature.FIRST..ip_product.lnk_feature.LAST
 	LOOP
 		INSERT INTO LNK_PRODUCT_FEATURE
 		VALUES(seq_lnk_prod_feat_id.NEXTVAL,
 			   ip_product.product_id,
-			   ip_lnk_feature(i).feature_id,
+			   ip_product.lnk_feature(i).feature_id,
 			   ip_product.active_flag,
 			   USER,
 			   CURRENT_DATE,
@@ -51,7 +49,7 @@ BEGIN
 		
 		UPDATE FEATURE
 		   SET FEATURE.linked = 1
-		 WHERE FEATURE.feature_id =  ip_lnk_feature(i).feature_id,
+		 WHERE FEATURE.feature_id =  ip_product.lnk_feature(i).feature_id,
 		   AND FEATURE.linked = 0;
 	END LOOP;
 	
