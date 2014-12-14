@@ -1,24 +1,24 @@
 CREATE TABLE   Feature (
-	feature _id                         number,
-	group_id                            number,
-	feature_type_id                     number,
+	feature _id                         number(5),
+	group_id                            number(5),
+	feature_type_id                     number(5),
 	feature _value                      varchar2(200),
 	description                         varchar(4000),
 	valid_start_date                    timestamp(6) with local time zone,
 	status_id                           number,
 	last_action_id                      number,
-	publish                             number(0,1),
-	last_record                         number(0,1),
-	linked                              number(0,1),
-	was_published                       number(0,1),
+	publish                             number(1),
+	last_record                         number(1),
+	linked                              number(1),
+	was_published                       number(11),
 	comments                            varchar2(4000),
-	active_flag                         number(0,1),
+	active_flag                         number(1),
 	last_modified_by                    varchar2(200),
-	last_modified_date                  timestamp(6) with local timezone,
+	last_modified_date                  timestamp(6) with local time zone,
 	created_by                          varchar2(200),
-	created_date                        timestamp(6)  with local timezone,
-	is_default                          number(0,1),
-	is_editable                         number(0,1)
+	created_date                        timestamp(6)  with local time zone,
+	is_default                          number(1),
+	is_editable                         number(1)
 );
 
 ALTER TABLE Feature

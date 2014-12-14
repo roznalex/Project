@@ -61,7 +61,7 @@ PACKAGE BODY PKG_FEATURE AS
   END p_add_pending_approval;
 
   PROCEDURE p_amend(ip_feature IN T_FEATURE) AS
-  v_feature T_FEATURE;
+	v_feature T_FEATURE;
 	v_state   T_STATE;
   BEGIN
     SELECT T_FEATURE(FEATURE.feature_id,
@@ -145,7 +145,7 @@ PACKAGE BODY PKG_FEATURE AS
   END p_amend;
 
   PROCEDURE p_approve(ip_feature IN T_FEATURE) AS
-  v_feature              T_FEATURE;
+	v_feature              T_FEATURE;
 	v_state                T_STATE;
 	v_id_of_last_published NUMBER;
   BEGIN
@@ -238,7 +238,7 @@ PACKAGE BODY PKG_FEATURE AS
   END p_approve;
 
   PROCEDURE p_reject(ip_feature IN T_FEATURE) AS
-  v_feature                    T_FEATURE;
+	v_feature                    T_FEATURE;
 	v_state                      T_STATE;
 	RETURN_TO_THE_LAST_PUBLISHED BOOLEAN DEFAULT FALSE;
 	v_id_of_last_published       NUMBER;
@@ -341,7 +341,7 @@ PACKAGE BODY PKG_FEATURE AS
   END p_reject;
 
   PROCEDURE p_discard(ip_feature IN T_FEATURE) AS
-  v_feature                    T_FEATURE;
+	v_feature                    T_FEATURE;
 	v_state                      T_STATE;
 	RETURN_TO_THE_LAST_PUBLISHED BOOLEAN DEFAULT FALSE;
 	v_id_of_last_published       NUMBER;
@@ -449,7 +449,7 @@ PACKAGE BODY PKG_FEATURE AS
   END p_discard;
 
   PROCEDURE p_deactivate(ip_feature IN T_FEATURE) AS
-  v_feature T_FEATURE;
+	v_feature T_FEATURE;
 	v_state   T_STATE;
   BEGIN
     SELECT T_FEATURE(FEATURE.feature_id,

@@ -1,7 +1,7 @@
 CREATE TABLE   Last_action (
-	last_action_id           number,
+	last_action_id           number(5),
 	last_action_name         varchar2(300),
-	active_flag              number(0,1),
+	active_flag              number(1),
 	last_modified_by         varchar2(200),
 	last_modified_date       timestamp(6) with local time zone,
 	created_by               varchar2(200),
