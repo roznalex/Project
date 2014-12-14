@@ -10,7 +10,7 @@ CREATE TABLE   Feature (
 	publish                             number(1),
 	last_record                         number(1),
 	linked                              number(1),
-	was_published                       number(11),
+	was_published                       number(1),
 	comments                            varchar2(4000),
 	active_flag                         number(1),
 	last_modified_by                    varchar2(200),
