@@ -1,5 +1,5 @@
 CREATE TABLE  Product (
-product _id				number(5),
+product_id				number(5),
 group_id 				number(5),
 product_uid 			number(5),
 product_name			varchar(150),
