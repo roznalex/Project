@@ -1,3 +1,13 @@
+create or replace PACKAGE PKG_PRODUCT AS 
+   PROCEDURE p_add_pending_approval(ip_product IN T_PRODUCT);
+	 PROCEDURE p_amend(ip_product IN T_PRODUCT);
+	 PROCEDURE p_approve(ip_product IN T_PRODUCT);
+	 PROCEDURE p_reject(ip_product IN T_PRODUCT);
+	 PROCEDURE p_discard(ip_product IN T_PRODUCT);
+	 PROCEDURE p_deactivate(ip_product IN T_PRODUCT);
+	 PROCEDURE p_reactivate(ip_product IN T_PRODUCT);
+END PKG_PRODUCT;
+
 create or replace PACKAGE BODY PKG_PRODUCT AS
 
   PROCEDURE p_add_pending_approval(ip_product IN T_PRODUCT) AS
