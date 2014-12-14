@@ -1,5 +1,5 @@
 CREATE TABLE   Feature (
-	feature _id                         number(5),
+	feature_id                         number(5),
 	group_id                            number(5),
 	feature_type_id                     number(5),
 	feature _value                      varchar2(200),
@@ -25,7 +25,7 @@ ALTER TABLE Feature
 ADD CONSTRAINT pk_feature primary key (feature _id);
 
 ALTER TABLE Feature
-ADD CONSTRAINT ch_feature_def check (is_default in (0,1);
+ADD CONSTRAINT ch_feature_def check (is_default in (0,1));
 
 ALTER TABLE Feature
 ADD CONSTRAINT ch_feature_edit check (is_editable in (0,1));
