@@ -18,7 +18,7 @@ last_modified_by        varchar2(200),
 last_modified_date      timestamp(6) with local timezone,
 created_by              varchar2(200),
 created_date            timestamp(6)  with local timezone
-)
+);
 
 ALTER TABLE Product 
 	ADD CONSTRAINT pk_product    			 primary key       ( product _id )

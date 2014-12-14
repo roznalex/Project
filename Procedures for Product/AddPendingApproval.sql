@@ -6,13 +6,13 @@ BEGIN
 	 THE PLACE FOR CHECKS WHICH THROW EXCEPTIONS
 	 ********************************************** */
 	CASE
-		WHEN /* FAILED CHECK */ THEN RAISE /* EXCEPTION */
+		WHEN /* FAILED CHECK */ THEN RAISE /* EXCEPTION */;
 	END;
 	/* **********************************************
 	 ////////////////////////////////////////////////
 	 ********************************************** */
 		 
-	v_state = T_STATE(0,1,0,/* PENDING_APPROVAL_ID */,/* ADD_PENDING_APPROVAL */);
+	v_state := T_STATE(0,1,0,/* PENDING_APPROVAL_ID */,/* ADD_PENDING_APPROVAL */);
 
 	INSERT INTO PRODUCT
 	VALUES(seq_prod_product_id.NEXTVAL,
@@ -49,7 +49,7 @@ BEGIN
 		
 		UPDATE FEATURE
 		   SET FEATURE.linked = 1
-		 WHERE FEATURE.feature_id =  ip_product.lnk_feature(i).feature_id,
+		 WHERE FEATURE.feature_id = ip_product.lnk_feature(i).feature_id
 		   AND FEATURE.linked = 0;
 	END LOOP;
 	
