@@ -6,10 +6,27 @@ create or replace PACKAGE PKG_PRODUCT AS
 	 PROCEDURE p_discard(ip_product IN T_PRODUCT);
 	 PROCEDURE p_deactivate(ip_product IN T_PRODUCT);
 	 PROCEDURE p_reactivate(ip_product IN T_PRODUCT);
+	 PROCEDURE p_curr_lnk_feat_for_prod(ip_product_id IN NUMBER(5), iop_lnk_feature_id IN OUT TBL_LNK_FEATURE);
 END PKG_PRODUCT;
 
 create or replace PACKAGE BODY PKG_PRODUCT AS
 
+  PROCEDURE p_curr_lnk_feat_for_prod(ip_product_id IN NUMBER, iop_lnk_feature_id IN OUT TBL_LNK_FEATURE) AS
+    CURSOR c_lnk_feat_for_prod(cip_product_id IN NUMBER) IS
+      SELECT lnk.feature_id
+        FROM LNK_PRODUCT_FEATURE lnk
+       WHERE lnk.product_id = cip_product_id;
+    v_count INT;
+    cursor_feature_id NUMBER(5);
+  BEGIN
+    v_count := 1;
+    FOR cursor_feature_id IN c_lnk_feat_for_prod(ip_product_id)
+    LOOP
+      iop_lnk_feature_id(v_count).feature_id := cursor_feature_id;
+      v_count := v_count + 1;
+    END LOOP;   
+  END p_curr_lnk_feat_for_prod;
+  
   PROCEDURE p_add_pending_approval(ip_product IN T_PRODUCT) AS
   v_state T_STATE;
   BEGIN	 
@@ -37,7 +54,6 @@ create or replace PACKAGE BODY PKG_PRODUCT AS
            v_state.last_action_id,
            v_state.publish,
            v_state.last_record,
-           ip_product.linked,
            v_state.was_published,
            ip_product.comments,
            ip_product.active_flag,
@@ -90,7 +106,6 @@ create or replace PACKAGE BODY PKG_PRODUCT AS
 					 PRODUCT.last_action_id,
 					 PRODUCT.publish,
 					 PRODUCT.last_record,
-					 PRODUCT.linked,
 					 PRODUCT.was_published,
 					 PRODUCT.comments,
 					 PRODUCT.active_flag,
@@ -132,7 +147,6 @@ create or replace PACKAGE BODY PKG_PRODUCT AS
            v_state.last_action_id,
            v_state.publish,
            v_state.last_record,
-           v_product.linked,
            v_state.was_published,
            COALESCE(ip_product.comments,        	v_product.comments),
            v_product.active_flag,
@@ -144,6 +158,24 @@ create or replace PACKAGE BODY PKG_PRODUCT AS
     UPDATE PRODUCT
       SET PRODUCT.last_record = 0
     WHERE PRODUCT.product_id = ip_product.product_id;
+    
+    FOR i IN ip_product.lnk_feature.FIRST..ip_product.lnk_feature.LAST
+    LOOP
+      INSERT INTO LNK_PRODUCT_FEATURE
+      VALUES(seq_lnk_prod_feat_id.NEXTVAL,
+             seq_prod_product_id.CURRVAL,
+             ip_product.lnk_feature(i).feature_id,
+             ip_product.active_flag,
+             USER,
+             CURRENT_DATE,
+             USER,
+             CURRENT_DATE);
+      
+      UPDATE FEATURE
+         SET FEATURE.linked = 1
+       WHERE FEATURE.feature_id = ip_product.lnk_feature(i).feature_id
+         AND FEATURE.linked = 0;
+    END LOOP;
   
   EXCEPTION
     /* **********************************************
@@ -160,6 +192,7 @@ create or replace PACKAGE BODY PKG_PRODUCT AS
   v_product T_PRODUCT;
 	v_state   T_STATE;
 	v_id_of_last_published NUMBER(5);
+  v_list_lnk_feature TBL_LNK_FEATURE;
   BEGIN
     SELECT T_PRODUCT(PRODUCT.product_id,
 					 PRODUCT.group_id,
@@ -172,7 +205,6 @@ create or replace PACKAGE BODY PKG_PRODUCT AS
 					 PRODUCT.last_action_id,
 					 PRODUCT.publish,
 					 PRODUCT.last_record,
-					 PRODUCT.linked,
 					 PRODUCT.was_published,
 					 PRODUCT.comments,
 					 PRODUCT.active_flag,
@@ -210,7 +242,6 @@ create or replace PACKAGE BODY PKG_PRODUCT AS
            v_state.last_action_id,
            v_state.publish,
            v_state.last_record,
-           v_product.linked,
            v_state.was_published,
            v_product.comments,
            v_product.active_flag,
@@ -223,17 +254,32 @@ create or replace PACKAGE BODY PKG_PRODUCT AS
        SET PRODUCT.last_record = 0
      WHERE PRODUCT.product_id = ip_product.product_id;
 	 
-    IF ip_product.was_published = 1 THEN
+    IF v_product.was_published = 1 THEN
       SELECT PRODUCT.product_id INTO v_id_of_last_published
         FROM PRODUCT
-       WHERE PRODUCT.group_id  = ip_product.group_id
+       WHERE PRODUCT.group_id  = v_product.group_id
          AND PRODUCT.publish = 1
          AND PRODUCT.status_id = 4/* APPROVED_ID */;
       
       UPDATE PRODUCT
-           SET PRODUCT.last_record = 0
-         WHERE PRODUCT.product_id = v_id_of_last_published;
+         SET PRODUCT.last_record = 0
+       WHERE PRODUCT.product_id = v_id_of_last_published;
     END IF;
+    
+    p_curr_lnk_feat_for_prod(v_product.product_id,v_list_lnk_feature);
+    
+    FOR i IN v_list_lnk_feature.FIRST..v_list_lnk_feature.LAST
+    LOOP
+      INSERT INTO LNK_PRODUCT_FEATURE
+      VALUES(seq_lnk_prod_feat_id.NEXTVAL,
+             seq_prod_product_id.CURRVAL,
+             v_list_lnk_feature(i).feature_id,
+             v_product.active_flag,
+             USER,
+             CURRENT_DATE,
+             USER,
+             CURRENT_DATE);
+    END LOOP;
     
     EXCEPTION
     /* **********************************************
@@ -251,6 +297,7 @@ create or replace PACKAGE BODY PKG_PRODUCT AS
 	v_state                      T_STATE;
 	RETURN_TO_THE_LAST_PUBLISHED BOOLEAN DEFAULT FALSE;
 	v_id_of_last_published       NUMBER(5);
+  v_list_lnk_feature TBL_LNK_FEATURE;
   BEGIN
     SELECT T_PRODUCT(PRODUCT.product_id,
 					 PRODUCT.group_id,
@@ -263,7 +310,6 @@ create or replace PACKAGE BODY PKG_PRODUCT AS
 					 PRODUCT.last_action_id,
 					 PRODUCT.publish,
 					 PRODUCT.last_record,
-					 PRODUCT.linked,
 					 PRODUCT.was_published,
 					 PRODUCT.comments,
 					 PRODUCT.active_flag,
@@ -314,7 +360,6 @@ create or replace PACKAGE BODY PKG_PRODUCT AS
              v_state.last_action_id,
              v_state.publish,
              v_state.last_record,
-             v_product.linked,
              v_state.was_published,
              v_product.comments,
              v_product.active_flag,
@@ -322,11 +367,26 @@ create or replace PACKAGE BODY PKG_PRODUCT AS
              CURRENT_DATE,
              v_product.created_by,
              v_product.created_date);
-	END IF;
-	
-	UPDATE PRODUCT
-	   SET PRODUCT.last_record = 0
-	 WHERE PRODUCT.product_id = ip_product.product_id;
+  END IF;
+  
+  UPDATE PRODUCT
+     SET PRODUCT.last_record = 0
+   WHERE PRODUCT.product_id = ip_product.product_id;
+   
+  p_curr_lnk_feat_for_prod(v_product.product_id,v_list_lnk_feature);
+    
+  FOR i IN v_list_lnk_feature.FIRST..v_list_lnk_feature.LAST
+  LOOP
+    INSERT INTO LNK_PRODUCT_FEATURE
+    VALUES(seq_lnk_prod_feat_id.NEXTVAL,
+           seq_prod_product_id.CURRVAL,
+           v_list_lnk_feature(i).feature_id,
+           v_product.active_flag,
+           USER,
+           CURRENT_DATE,
+           USER,
+           CURRENT_DATE);
+  END LOOP;
    
    EXCEPTION
     /* **********************************************
@@ -344,6 +404,7 @@ create or replace PACKAGE BODY PKG_PRODUCT AS
 	v_state   					         T_STATE;
 	RETURN_TO_THE_LAST_PUBLISHED BOOLEAN DEFAULT FALSE;
 	v_id_of_last_published       NUMBER(5);
+  v_list_lnk_feature TBL_LNK_FEATURE;
   BEGIN
     SELECT T_PRODUCT(PRODUCT.product_id,
              PRODUCT.group_id,
@@ -356,7 +417,6 @@ create or replace PACKAGE BODY PKG_PRODUCT AS
              PRODUCT.last_action_id,
              PRODUCT.publish,
              PRODUCT.last_record,
-             PRODUCT.linked,
              PRODUCT.was_published,
              PRODUCT.comments,
              PRODUCT.active_flag,
@@ -412,7 +472,6 @@ create or replace PACKAGE BODY PKG_PRODUCT AS
                v_state.last_action_id,
                v_state.publish,
                v_state.last_record,
-               v_product.linked,
                v_state.was_published,
                v_product.comments,
                v_product.active_flag,
@@ -425,7 +484,22 @@ create or replace PACKAGE BODY PKG_PRODUCT AS
 	UPDATE PRODUCT
 	   SET PRODUCT.last_record = 0
 	 WHERE PRODUCT.product_id = ip_product.product_id;
-   
+  
+  p_curr_lnk_feat_for_prod(v_product.product_id,v_list_lnk_feature);
+    
+  FOR i IN v_list_lnk_feature.FIRST..v_list_lnk_feature.LAST
+  LOOP
+    INSERT INTO LNK_PRODUCT_FEATURE
+    VALUES(seq_lnk_prod_feat_id.NEXTVAL,
+           seq_prod_product_id.CURRVAL,
+           v_list_lnk_feature(i).feature_id,
+           v_product.active_flag,
+           USER,
+           CURRENT_DATE,
+           USER,
+           CURRENT_DATE);
+  END LOOP;
+  
     EXCEPTION
     /* **********************************************
      THE PLACE FOR EXCEPTIONS
@@ -441,6 +515,7 @@ create or replace PACKAGE BODY PKG_PRODUCT AS
   PROCEDURE p_deactivate(ip_product IN T_PRODUCT) AS
   v_product T_PRODUCT;
 	v_state   T_STATE;
+  v_list_lnk_feature TBL_LNK_FEATURE;
   BEGIN
     SELECT T_PRODUCT(PRODUCT.product_id,
 					 PRODUCT.group_id,
@@ -453,7 +528,6 @@ create or replace PACKAGE BODY PKG_PRODUCT AS
 					 PRODUCT.last_action_id,
 					 PRODUCT.publish,
 					 PRODUCT.last_record,
-					 PRODUCT.linked,
 					 PRODUCT.was_published,
 					 PRODUCT.comments,
 					 PRODUCT.active_flag,
@@ -489,7 +563,6 @@ create or replace PACKAGE BODY PKG_PRODUCT AS
          v_state.last_action_id,
          v_state.publish,
          v_state.last_record,
-         v_product.linked,
          v_state.was_published,
          v_product.comments,
          v_product.active_flag,
@@ -501,7 +574,22 @@ create or replace PACKAGE BODY PKG_PRODUCT AS
 	UPDATE PRODUCT
 	   SET PRODUCT.last_record = 0
 	 WHERE PRODUCT.product_id = ip_product.product_id;
-   
+  
+   p_curr_lnk_feat_for_prod(v_product.product_id,v_list_lnk_feature);
+    
+  FOR i IN v_list_lnk_feature.FIRST..v_list_lnk_feature.LAST
+  LOOP
+    INSERT INTO LNK_PRODUCT_FEATURE
+    VALUES(seq_lnk_prod_feat_id.NEXTVAL,
+           seq_prod_product_id.CURRVAL,
+           v_list_lnk_feature(i).feature_id,
+           v_product.active_flag,
+           USER,
+           CURRENT_DATE,
+           USER,
+           CURRENT_DATE);
+  END LOOP;
+  
    EXCEPTION
     /* **********************************************
      THE PLACE FOR EXCEPTIONS
@@ -516,6 +604,7 @@ create or replace PACKAGE BODY PKG_PRODUCT AS
   PROCEDURE p_reactivate(ip_product IN T_PRODUCT) AS
   v_product T_PRODUCT;
 	v_state   T_STATE;
+  v_list_lnk_feature TBL_LNK_FEATURE;
   BEGIN
     SELECT T_PRODUCT(PRODUCT.product_id,
 					 PRODUCT.group_id,
@@ -528,7 +617,6 @@ create or replace PACKAGE BODY PKG_PRODUCT AS
 					 PRODUCT.last_action_id,
 					 PRODUCT.publish,
 					 PRODUCT.last_record,
-					 PRODUCT.linked,
 					 PRODUCT.was_published,
 					 PRODUCT.comments,
 					 PRODUCT.active_flag,
@@ -564,7 +652,6 @@ create or replace PACKAGE BODY PKG_PRODUCT AS
 		   v_state.last_action_id,
 		   v_state.publish,
 		   v_state.last_record,
-		   v_product.linked,
 		   v_state.was_published,
 		   v_product.comments,
 		   v_product.active_flag,
@@ -576,6 +663,22 @@ create or replace PACKAGE BODY PKG_PRODUCT AS
 	UPDATE PRODUCT
 	   SET PRODUCT.last_record = 0
 	 WHERE PRODUCT.product_id = ip_product.product_id;
+   
+    p_curr_lnk_feat_for_prod(v_product.product_id,v_list_lnk_feature);
+    
+  FOR i IN v_list_lnk_feature.FIRST..v_list_lnk_feature.LAST
+  LOOP
+    INSERT INTO LNK_PRODUCT_FEATURE
+    VALUES(seq_lnk_prod_feat_id.NEXTVAL,
+           seq_prod_product_id.CURRVAL,
+           v_list_lnk_feature(i).feature_id,
+           v_product.active_flag,
+           USER,
+           CURRENT_DATE,
+           USER,
+           CURRENT_DATE);
+  END LOOP;
+   
    EXCEPTION
     /* **********************************************
      THE PLACE FOR EXCEPTIONS

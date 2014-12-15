@@ -18,7 +18,6 @@ create or replace TYPE T_PRODUCT AS OBJECT
 	 last_action_id		  	NUMBER(5),
 	 publish 			    NUMBER(1),
 	 last_record        	NUMBER(1),
-	 linked             	NUMBER(1),
 	 was_published      	NUMBER(1),
 	 comments           	VARCHAR2(4000),
 	 active_flag        	NUMBER(1),
@@ -41,11 +40,15 @@ CREATE SEQUENCE seq_lnk_prod_feat_id
 	INCREMENT BY 1
 	START WITH 1;
 
-
- CREATE SEQUENCE SEQ_PROD_PRODUCT_ID
-		MINVALUE 1
-		INCREMENT BY 1 
-		START WITH 1;
+CREATE SEQUENCE SEQ_PROD_PRODUCT_ID
+	MINVALUE 1
+	INCREMENT BY 1 
+	START WITH 1;
+	
+CREATE SEQUENCE SEQ_PROD_GROUP_ID
+	MINVALUE 1
+	INCREMENT BY 1 
+	START WITH 1;
  
 
  
