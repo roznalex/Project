@@ -17,14 +17,22 @@ create or replace PACKAGE BODY PKG_PRODUCT AS
         FROM LNK_PRODUCT_FEATURE lnk
        WHERE lnk.product_id = cip_product_id;
     v_count INT;
-    cursor_feature_id NUMBER(5);
   BEGIN
-    v_count := 1;
-    FOR cursor_feature_id IN c_lnk_feat_for_prod(ip_product_id)
+    /*FOR cursor_feature_id IN c_lnk_feat_for_prod(ip_product_id)
     LOOP
       iop_lnk_feature_id(v_count).feature_id := cursor_feature_id;
       v_count := v_count + 1;
-    END LOOP;   
+    END LOOP;*/
+    OPEN c_lnk_feat_for_prod(ip_product_id);
+    
+    v_count := c_lnk_feat_for_prod%ROWCOUNT;
+    
+    FOR i IN 1..v_count
+    LOOP
+      FETCH c_lnk_feat_for_prod INTO iop_lnk_feature_id(i).feature_id;
+    END LOOP;
+    
+    CLOSE c_lnk_feat_for_prod;
   END p_curr_lnk_feat_for_prod;
   
   PROCEDURE p_add_pending_approval(ip_product IN T_PRODUCT) AS
