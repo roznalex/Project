@@ -146,7 +146,7 @@ create or replace PACKAGE BODY PKG_PRODUCT AS
     INSERT INTO PRODUCT
     VALUES(seq_prod_product_id.NEXTVAL,
            v_product.group_id,
-           v_product.product_uid, 
+           COALESCE(ip_product.product_uid,               v_product.product_uid),
            COALESCE(ip_product.product_name,		  v_product.product_name), 
            COALESCE(ip_product.product_long_name,	v_product.product_long_name), 
            COALESCE(ip_product.description,			  v_product.description), 
