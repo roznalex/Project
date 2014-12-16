@@ -5,135 +5,126 @@ CREATE TYPE Integer_tab IS TABLE OF INTEGER;
 
 /
 
-    CREATE OR REPLACE PROCEDURE get_latestrec_for_f (value_out OUT Feature%ROWTYPE) IS
-    BEGIN
-        EXECUTE IMMEDIATE
-        'SELECT *'
-        || ' FROM '
-        || Feature
-        || ' WHERE '
-        || 'last_record = 1'
-        INTO value_out;
-    END get_latestrec_for_f;
+CREATE OR REPLACE PROCEDURE get_latestrec_for_f (value_out OUT SYS_REFCURSOR) IS
+    v_sql VARCHAR2(1000);
+BEGIN
+    v_sql := 'SELECT * FROM Feature WHERE last_record = 1'
+    OPEN value_out FOR v_sql;
+    CLOSE value_out;
+END get_latestrec_for_f;
 /
-    CREATE OR REPLACE PROCEDURE get_latestrec_for_p (value_out OUT Product%ROWTYPE) IS
-    BEGIN
-        EXECUTE IMMEDIATE
-        'SELECT *'
-        || ' FROM '
-        || Product
-        || ' WHERE '
-        || 'last_record = 1'
-        INTO value_out;
-    END get_latestrec_for_p;
+CREATE OR REPLACE PROCEDURE get_latestrec_for_p (value_out OUT SYS_REFCURSOR) IS
+    v_sql VARCHAR2(1000);
+BEGIN
+    v_sql := 'SELECT * FROM Product WHERE last_record = 1'
+    OPEN value_out FOR v_sql;
+    CLOSE value_out;
+END get_latestrec_for_p;
 /
-    CREATE OR REPLACE PROCEDURE all_active (value_out OUT Varchar_tab) IS
-    BEGIN
-        EXECUTE IMMEDIATE
-        'SELECT '
-        || 'status_name'
-        || ' FROM '
-        || Status
-        || ' WHERE '
-        || 'active_flag = 1'
-        BULK COLLECT INTO value_out;
-    END all_active;
+CREATE OR REPLACE PROCEDURE all_active (value_out OUT Varchar_tab) IS
+BEGIN
+    EXECUTE IMMEDIATE
+    'SELECT '
+    || 'status_name'
+    || ' FROM '
+    || Status
+    || ' WHERE '
+    || 'active_flag = 1'
+    BULK COLLECT INTO value_out;
+END all_active;
 /
-    CREATE OR REPLACE PROCEDURE get_last_action(value_out OUT Last_action%ROWTYPE) IS
-    BEGIN
-        EXECUTE IMMEDIATE
-        'SELECT *'
-        || ' FROM '
-        || 'Last_action'
-        || ' WHERE '
-        || 'last_modified_date = MAX(last_modified_date)'
-        INTO value_out;
-    END get_last_action;
+CREATE OR REPLACE PROCEDURE all_active_from_la(value_out OUT SYS_REFCURSOR) IS
+    v_sql VARCHAR2(1000);
+BEGIN
+    v_sql := 'SELECT * FROM Last_action WHERE active_flag = 1'
+    OPEN value_out FOR v_sql;
+    CLOSE value_out;
+END all_active_from_la;
 /
-    CREATE OR REPLACE PROCEDURE get_all_users(from_in IN VARCHAR2,
-                                    value_out OUT Varchar_tab) IS
-    BEGIN
+CREATE OR REPLACE PROCEDURE get_all_users(from_in IN VARCHAR2,
+                                value_out OUT Varchar_tab) IS
+BEGIN
+    EXECUTE IMMEDIATE
+    'SELECT DISTINCT '
+    || 'last_modified_by'
+    || ' FROM '
+    || from_in
+    BULK COLLECT INTO value_out;
+END get_all_users;
+/
+CREATE OR REPLACE PROCEDURE get_active_fts(value_out OUT Varchar_tab) IS
+BEGIN
+    EXECUTE IMMEDIATE
+    'SELECT '
+    || 'feature_type_name'
+    || ' FROM '
+    || 'Feature_type'
+    || ' WHERE '
+    || 'active_flag = 1'
+    BULK COLLECT INTO value_out;
+END get_active_fts;
+/
+CREATE OR REPLACE PROCEDURE get_uq_fvs(value_out OUT Varchar_tab) IS
+BEGIN
+    EXECUTE IMMEDIATE
+    'SELECT DISTINCT '
+    || 'feature_value'
+    || ' FROM '
+    || 'Feature'
+    BULK COLLECT INTO value_out;
+END get_uq_fvs;
+/
+CREATE OR REPLACE PROCEDURE get_uq_gids(value_out OUT Integer_tab) IS
+BEGIN
+    EXECUTE IMMEDIATE
+    'SELECT DISTINCT '
+    || 'group_id'
+    || ' FROM '
+    || 'Feature'
+    BULK COLLECT INTO value_out;
+END get_uq_gids;
+/
+CREATE OR REPLACE PROCEDURE get_uq_gids(value_out OUT Integer_tab) IS
+BEGIN
+    EXECUTE IMMEDIATE
+    'SELECT DISTINCT '
+    || 'group_id'
+    || ' FROM '
+    || 'Product'
+    BULK COLLECT INTO value_out;
+END get_uq_gids;
+/
+CREATE OR REPLACE PROCEDURE get_uq_names(value_out OUT Varchar_tab, length_in IN VARCHAR2) IS
+BEGIN
+    IF length_in = 'short' THEN
         EXECUTE IMMEDIATE
         'SELECT DISTINCT '
-        || 'last_modified_by'
+        || 'product_name'
         || ' FROM '
-        || from_in
+        || 'Product'
         BULK COLLECT INTO value_out;
-    END get_all_users;
-/
-    CREATE OR REPLACE PROCEDURE get_active_fts(value_out OUT Varchar_tab) IS
-    BEGIN
-        EXECUTE IMMEDIATE
-        'SELECT '
-        || 'feature_type_name'
-        || ' FROM '
-        || Feature_type
-        || ' WHERE '
-        || 'active_flag = 1'
-        BULK COLLECT INTO value_out;
-    END get_active_fts;
-/
-    CREATE OR REPLACE PROCEDURE get_uq_fvs(value_out OUT Varchar_tab) IS
-    BEGIN
+    ELSE
         EXECUTE IMMEDIATE
         'SELECT DISTINCT '
-        || 'feature_value'
+        || 'product_long_name'
         || ' FROM '
-        || Feature
+        || 'Product'
         BULK COLLECT INTO value_out;
-    END get_uq_fvs;
+    END IF;
+END get_uq_names;
 /
-    CREATE OR REPLACE PROCEDURE get_uq_gids(value_out OUT Integer_tab) IS
-    BEGIN
-        EXECUTE IMMEDIATE
-        'SELECT DISTINCT '
-        || 'group_id'
-        || ' FROM '
-        || Feature
-        BULK COLLECT INTO value_out;
-    END get_uq_gids;
-/
-    CREATE OR REPLACE PROCEDURE get_uq_gids(value_out OUT Integer_tab) IS
-    BEGIN
-        EXECUTE IMMEDIATE
-        'SELECT DISTINCT '
-        || 'group_id'
-        || ' FROM '
-        || Product
-        BULK COLLECT INTO value_out;
-    END get_uq_gids;
-/
-    CREATE OR REPLACE PROCEDURE get_uq_names(value_out OUT Varchar_tab, length_in IN VARCHAR2) IS
-    BEGIN
-        IF length_in = 'short' THEN
-            EXECUTE IMMEDIATE
-            'SELECT DISTINCT '
-            || 'product_name'
-            || ' FROM '
-            || Product
-            BULK COLLECT INTO value_out;
-        ELSE
-            EXECUTE IMMEDIATE
-            'SELECT DISTINCT '
-            || 'product_long_name'
-            || ' FROM '
-            || Product
-            BULK COLLECT INTO value_out;
-        END IF;
-    END get_uq_names;
-/
-    CREATE OR REPLACE PROCEDURE get_fvs_from_product(value_out OUT Varchar_tab) IS
-    BEGIN
-        EXECUTE IMMEDIATE
-        'SELECT '
-        || 'feature_value'
-        || ' FROM '
-        || Feature
-        || ' WHERE '
-        || 'feature_id EXISTS (SELECT feature_id
-                                FROM LNK_Product_Feature)'
-        BULK COLLECT INTO value_out;
-    END get_fvs_from_product;
+CREATE OR REPLACE PROCEDURE get_fvs_from_product(value_out OUT Varchar_tab) IS
+BEGIN
+    EXECUTE IMMEDIATE
+    'SELECT '
+    || 'feature_value'
+    || ' FROM '
+    || 'Feature'
+    || ' WHERE '
+    || 'feature_id EXISTS (SELECT feature_id
+                            FROM LNK_Product_Feature)'
+    BULK COLLECT INTO value_out;
+END get_fvs_from_product;
 /
 CREATE OR REPLACE PROCEDURE f_filter ( publish IN NUMBER,
                                         linked IN NUMBER(,
@@ -180,7 +171,7 @@ BEGIN
             END LOOP;
             v_temp := v_temp || status_multiselect(status_multiselect.LAST) || ')';
 
-            v_sql := v_sql || 'status_id IN (SELECT status_id FROM Status WHERE status_name IN ' 
+            v_sql := v_sql || 'status_id IN (SELECT status_id FROM Status WHERE status_name IN '
                             || v_temp || ') AND ';
         END IF;
 
@@ -263,7 +254,7 @@ BEGIN
             END LOOP;
             v_temp := v_temp || status_multiselect(status_multiselect.LAST) || ')';
 
-            v_sql := v_sql || 'status_id IN (SELECT status_id FROM Status WHERE status_name IN ' 
+            v_sql := v_sql || 'status_id IN (SELECT status_id FROM Status WHERE status_name IN '
                             || v_temp || ') AND ';
         END IF;
 
@@ -299,7 +290,7 @@ BEGIN
 
         IF feature_value IS NOT NULL THEN
             v_sql := v_sql || 'product_id IN (SELECT product_id FROM LNK_Product_Feature WHERE
-                                feature_id = (SELECT feature_id FROM Feature WHERE feature_value = ' 
+                                feature_id = (SELECT feature_id FROM Feature WHERE feature_value = '
                                     || feature_value || '))';
         END IF;
 

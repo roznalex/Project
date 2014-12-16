@@ -10,10 +10,10 @@ CREATE OR REPLACE TYPE g_filter_obj AS object(
     status_multiselect  Varchar_tab,
     last_action         VARCHAR2(300),
     users               Varchar_tab,
-    MEMBER PROCEDURE get_latestrec_for_f(value_out OUT Feature%ROWTYPE),
-    MEMBER PROCEDURE get_latestrec_for_p(value_out OUT Product%ROWTYPE),
+    MEMBER PROCEDURE get_latestrec_for_f(value_out OUT SYS_REFCURSOR),
+    MEMBER PROCEDURE get_latestrec_for_p(value_out OUT SYS_REFCURSOR),
     MEMBER PROCEDURE get_active_statuses(value_out OUT Varchar_tab),
-    MEMBER PROCEDURE get_last_action(value_out OUT Last_action%ROWTYPE),
+    MEMBER PROCEDURE all_active_from_la(value_out OUT SYS_REFCURSOR),
     MEMBER PROCEDURE get_all_users(from_in IN VARCHAR2, value_out OUT Varchar_tab)
 );
 /
@@ -33,33 +33,27 @@ CREATE OR REPLACE TYPE p_filter_obj AS object(
     product_uid         INTEGER,
     product_name        VARCHAR2(150),
     product_long_name   VARCHAR2(250),
-    MEMBER PROCEDURE get_uq_names(value_out OUT Varcah_tab, length_in IN VARCHAR2),
-    MEMBER PROCEDURE get_fvs_from_product(value_out OUT Varcahr_tab),
+    MEMBER PROCEDURE get_uq_names(value_out OUT Varchar_tab, length_in IN VARCHAR2),
+    MEMBER PROCEDURE get_fvs_from_product(value_out OUT Varchar_tab),
     MEMBER PROCEDURE get_uq_gids(value_out OUT Integer_tab)
 );
 /
 CREATE OR REPLACE TYPE BODY g_filter_obj AS
 
-    MEMBER PROCEDURE get_latestrec_for_f (value_out OUT Feature%ROWTYPE) IS
+    MEMBER PROCEDURE get_latestrec_for_f (value_out OUT SYS_REFCURSOR) IS
+    v_sql VARCHAR2(1000);
     BEGIN
-        EXECUTE IMMEDIATE
-        'SELECT *'
-        || ' FROM '
-        || Feature
-        || ' WHERE '
-        || 'last_record = 1'
-        INTO value_out;
+        v_sql := 'SELECT * FROM Feature WHERE last_record = 1'
+        OPEN value_out FOR v_sql;
+        CLOSE value_out;
     END get_latestrec_for_f;
 
-    MEMBER PROCEDURE get_latestrec_for_p (value_out OUT Product%ROWTYPE) IS
+    MEMBER PROCEDURE get_latestrec_for_p (value_out OUT SYS_REFCURSOR) IS
+        v_sql VARCHAR2(1000);
     BEGIN
-        EXECUTE IMMEDIATE
-        'SELECT *'
-        || ' FROM '
-        || Product
-        || ' WHERE '
-        || 'last_record = 1'
-        INTO value_out;
+        v_sql := 'SELECT * FROM Product WHERE last_record = 1'
+        OPEN value_out FOR v_sql;
+        CLOSE value_out;
     END get_latestrec_for_p;
 
     MEMBER PROCEDURE all_active (value_out OUT Varchar_tab) IS
@@ -68,22 +62,19 @@ CREATE OR REPLACE TYPE BODY g_filter_obj AS
         'SELECT '
         || 'status_name'
         || ' FROM '
-        || Status
+        || 'Status'
         || ' WHERE '
         || 'active_flag = 1'
         BULK COLLECT INTO value_out;
     END all_active;
 
-    MEMBER PROCEDURE get_last_action(value_out OUT Last_action%ROWTYPE) IS
+    MEMBER PROCEDURE all_active_from_la(value_out OUT SYS_REFCURSOR) IS
+        v_sql VARCHAR2(1000);
     BEGIN
-        EXECUTE IMMEDIATE
-        'SELECT *'
-        || ' FROM '
-        || 'Last_action'
-        || ' WHERE '
-        || 'last_modified_date = MAX(last_modified_date)'
-        INTO value_out;
-    END get_last_action;
+        v_sql := 'SELECT * FROM Last_action WHERE active_flag = 1'
+        OPEN value_out FOR v_sql;
+        CLOSE value_out;
+    END all_active_from_la;
 
     MEMBER PROCEDURE get_all_users(from_in IN VARCHAR2,
                                     value_out OUT Varchar_tab) IS
@@ -104,7 +95,7 @@ CREATE OR REPLACE TYPE BODY f_filter_obj AS
         'SELECT '
         || 'feature_type_name'
         || ' FROM '
-        || Feature_type
+        || 'Feature_type'
         || ' WHERE '
         || 'active_flag = 1'
         BULK COLLECT INTO value_out;
@@ -116,7 +107,7 @@ CREATE OR REPLACE TYPE BODY f_filter_obj AS
         'SELECT DISTINCT '
         || 'feature_value'
         || ' FROM '
-        || Feature
+        || 'Feature'
         BULK COLLECT INTO value_out;
     END get_uq_fvs;
 
@@ -126,7 +117,7 @@ CREATE OR REPLACE TYPE BODY f_filter_obj AS
         'SELECT DISTINCT '
         || 'group_id'
         || ' FROM '
-        || Feature
+        || 'Feature'
         BULK COLLECT INTO value_out;
     END get_uq_gids;
 END;
@@ -138,36 +129,36 @@ CREATE OR REPLACE TYPE BODY p_filter_obj AS
         'SELECT DISTINCT '
         || 'group_id'
         || ' FROM '
-        || Product
+        || 'Product'
         BULK COLLECT INTO value_out;
     END get_uq_gids;
 
-    MEMBER PROCEDURE get_uq_names(value_out OUT Varcah_tab, length_in IN VARCHAR2) IS
+    MEMBER PROCEDURE get_uq_names(value_out OUT Varchar_tab, length_in IN VARCHAR2) IS
     BEGIN
         IF length_in = 'short' THEN
             EXECUTE IMMEDIATE
             'SELECT DISTINCT '
             || 'product_name'
             || ' FROM '
-            || Product
+            || 'Product'
             BULK COLLECT INTO value_out;
         ELSE
             EXECUTE IMMEDIATE
             'SELECT DISTINCT '
             || 'product_long_name'
             || ' FROM '
-            || Product
+            || 'Product'
             BULK COLLECT INTO value_out;
         END IF;
     END get_uq_names;
 
-    MEMBER PROCEDURE get_fvs_from_product(value_out OUT Varcahr_tab) IS
+    MEMBER PROCEDURE get_fvs_from_product(value_out OUT Varchar_tab) IS
     BEGIN
         EXECUTE IMMEDIATE
         'SELECT '
         || 'feature_value'
         || ' FROM '
-        || Feature
+        || 'Feature'
         || ' WHERE '
         || 'feature_id EXISTS (SELECT feature_id
                                 FROM LNK_Product_Feature)'
@@ -191,7 +182,7 @@ BEGIN
         OPEN cur_out FOR l_feature_piece;
         CLOSE cur_out;
     ELSE
-        v_sql := 'SELECT T_FEATURE';
+        v_sql := 'SELECT * ';
         v_sql := v_sql || 'FROM Feature';
         v_sql := v_sql || 'WHERE ';
 
@@ -271,7 +262,7 @@ BEGIN
         OPEN cur_out FOR l_product_piece;
         CLOSE cur_out;
     ELSE
-        v_sql := 'SELECT T_PRODUCT';
+        v_sql := 'SELECT * ';
         v_sql := v_sql || 'FROM Product';
         v_sql := v_sql || 'WHERE ';
 
