@@ -3,7 +3,7 @@ CREATE TYPE Varchar_tab IS TABLE OF VARCHAR2(200);
 /
 CREATE TYPE Integer_tab IS TABLE OF INTEGER;
 /
-CREATE OR REPLACE TYPE g_filter_obj AS (
+CREATE OR REPLACE TYPE g_filter_obj AS object(
     publish             NUMBER(1),
     linked              NUMBER(1),
     latestrecord        NUMBER(1),
@@ -17,7 +17,7 @@ CREATE OR REPLACE TYPE g_filter_obj AS (
     MEMBER PROCEDURE get_all_users(from_in IN VARCHAR2, value_out OUT Varchar_tab)
 );
 /
-CREATE OR REPLACE TYPE f_filter_obj AS (
+CREATE OR REPLACE TYPE f_filter_obj AS object (
     grid_filter_obj     g_filter_obj,
     feature_type        VARCHAR2(200),
     feature_value       VARCHAR2(200),
@@ -27,7 +27,7 @@ CREATE OR REPLACE TYPE f_filter_obj AS (
     MEMBER PROCEDURE get_uq_gids(value_out OUT Integer_tab)
 );
 /
-CREATE OR REPLACE TYPE p_filter_obj AS (
+CREATE OR REPLACE TYPE p_filter_obj AS object(
     grid_filter_obj     g_filter_obj,
     feature_value       VARCHAR2(200),
     product_uid         INTEGER,
