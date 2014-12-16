@@ -8,6 +8,7 @@ CREATE OR REPLACE TYPE g_filter_obj AS (
     linked              NUMBER(1),
     latestrecord        NUMBER(1),
     status_multiselect  Varchar_tab,
+    last_action         VARCHAR2(300),
     users               Varchar_tab,
     MEMBER PROCEDURE get_latestrec_for_f(value_out OUT Feature%ROWTYPE),
     MEMBER PROCEDURE get_latestrec_for_p(value_out OUT Product%ROWTYPE),
@@ -65,7 +66,7 @@ CREATE OR REPLACE TYPE BODY g_filter_obj AS
     BEGIN
         EXECUTE IMMEDIATE
         'SELECT '
-        || status_name
+        || 'status_name'
         || ' FROM '
         || Status
         || ' WHERE '
@@ -78,7 +79,7 @@ CREATE OR REPLACE TYPE BODY g_filter_obj AS
         EXECUTE IMMEDIATE
         'SELECT *'
         || ' FROM '
-        || Last_action
+        || 'Last_action'
         || ' WHERE '
         || 'last_modified_date = MAX(last_modified_date)'
         INTO value_out;
@@ -88,8 +89,8 @@ CREATE OR REPLACE TYPE BODY g_filter_obj AS
                                     value_out OUT Varchar_tab) IS
     BEGIN
         EXECUTE IMMEDIATE
-        'SELECT DISTINCT'
-        || last_modified_by
+        'SELECT DISTINCT '
+        || 'last_modified_by'
         || ' FROM '
         || from_in
         BULK COLLECT INTO value_out;
@@ -101,7 +102,7 @@ CREATE OR REPLACE TYPE BODY f_filter_obj AS
     BEGIN
         EXECUTE IMMEDIATE
         'SELECT '
-        || feature_type_name
+        || 'feature_type_name'
         || ' FROM '
         || Feature_type
         || ' WHERE '
@@ -112,8 +113,8 @@ CREATE OR REPLACE TYPE BODY f_filter_obj AS
     MEMBER PROCEDURE get_uq_fvs(value_out OUT Varchar_tab) IS
     BEGIN
         EXECUTE IMMEDIATE
-        'SELECT DISTINCT'
-        || feature_value
+        'SELECT DISTINCT '
+        || 'feature_value'
         || ' FROM '
         || Feature
         BULK COLLECT INTO value_out;
@@ -122,8 +123,8 @@ CREATE OR REPLACE TYPE BODY f_filter_obj AS
     MEMBER PROCEDURE get_uq_gids(value_out OUT Integer_tab) IS
     BEGIN
         EXECUTE IMMEDIATE
-        'SELECT DISTINCT'
-        || group_id
+        'SELECT DISTINCT '
+        || 'group_id'
         || ' FROM '
         || Feature
         BULK COLLECT INTO value_out;
@@ -134,8 +135,8 @@ CREATE OR REPLACE TYPE BODY p_filter_obj AS
     MEMBER PROCEDURE get_uq_gids(value_out OUT Integer_tab) IS
     BEGIN
         EXECUTE IMMEDIATE
-        'SELECT DISTINCT'
-        || group_id
+        'SELECT DISTINCT '
+        || 'group_id'
         || ' FROM '
         || Product
         BULK COLLECT INTO value_out;
@@ -145,15 +146,15 @@ CREATE OR REPLACE TYPE BODY p_filter_obj AS
     BEGIN
         IF length_in = 'short' THEN
             EXECUTE IMMEDIATE
-            'SELECT DISTINCT'
-            || product_name
+            'SELECT DISTINCT '
+            || 'product_name'
             || ' FROM '
             || Product
             BULK COLLECT INTO value_out;
         ELSE
             EXECUTE IMMEDIATE
-            'SELECT DISTINCT'
-            || product_long_name
+            'SELECT DISTINCT '
+            || 'product_long_name'
             || ' FROM '
             || Product
             BULK COLLECT INTO value_out;
@@ -164,7 +165,7 @@ CREATE OR REPLACE TYPE BODY p_filter_obj AS
     BEGIN
         EXECUTE IMMEDIATE
         'SELECT '
-        || feature_value
+        || 'feature_value'
         || ' FROM '
         || Feature
         || ' WHERE '
@@ -175,7 +176,7 @@ CREATE OR REPLACE TYPE BODY p_filter_obj AS
 
 END;
 /
-CREATE OR REAPLACE PROCDURE f_filter ( f_filter_obj_in IN f_filter_obj,
+CREATE OR REPLACE PROCEDURE f_filter ( f_filter_obj_in IN f_filter_obj,
                                         cur_out OUT SYS_REFCURSOR)
 IS
 
@@ -245,7 +246,7 @@ BEGIN
         END IF;
 
         IF f_filter_obj_in.feature_id IS NOT NULL THEN
-            v_sql := v_sql || 'feature_id = ' || f_filter_obj_in.feature_id || ';'
+            v_sql := v_sql || 'feature_id = ' || f_filter_obj_in.feature_id ;
         END IF;
 
         OPEN cut_out FOR v_sql;
@@ -255,7 +256,7 @@ BEGIN
 END;
 
 /
-CREATE OR REAPLACE PROCDURE p_filter ( p_filter_obj_in IN p_filter_obj,
+CREATE OR REPLACE PROCEDURE p_filter ( p_filter_obj_in IN p_filter_obj,
                                         cur_out OUT SYS_REFCURSOR)
 IS
 
@@ -315,7 +316,7 @@ BEGIN
         END IF;
 
         IF p_filter_obj_in.product_uid IS NOT NULL THEN
-            v_sql := v_sql || 'product_uid = ' || p_filter_obj_in.product_uid || ' AND '
+            v_sql := v_sql || 'product_uid = ' || p_filter_obj_in.product_uid || ' AND ';
         END IF;
 
         IF p_filter_obj_in.product_name IS NOT NULL THEN
@@ -328,7 +329,7 @@ BEGIN
 
         IF p_filter_obj_in.feature_value IS NOT NULL THEN
             v_sql := v_sql || 'product_id IN (SELECT product_id FROM LNK_Product_Feature WHERE
-                                feature_id = (SELECT feature_id FROM Feature WHERE feature_value = ' p_filter_obj_in.feature_value || '))';
+                                feature_id = (SELECT feature_id FROM Feature WHERE feature_value = ' || p_filter_obj_in.feature_value || '))';
         END IF;
 
         OPEN cut_out FOR v_sql;
