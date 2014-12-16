@@ -37,7 +37,7 @@ create or replace PACKAGE BODY PKG_FEATURE AS
          v_state.last_action_id,
          v_state.publish,
          v_state.last_record,
-         ip_feature.linked,
+         0,
          v_state.was_published,
          ip_feature.comments,
          ip_feature.active_flag,
@@ -99,7 +99,7 @@ create or replace PACKAGE BODY PKG_FEATURE AS
     IF    v_feature.status_id = 4/* APPROVED_ID */ THEN
       v_state := T_STATE(0,1,1,1/* PENDING_APPROVAL_ID */,2/* AMEND */);
     ELSIF v_feature.status_id = 1/* PENDING_APPROVAL_ID */ THEN
-      v_state := T_STATE(0,1,0,1/* PENDING_APPROVAL_ID */,2/* AMEND */);
+      v_state := T_STATE(0,1,v_feature.was_published,1/* PENDING_APPROVAL_ID */,2/* AMEND */);
     ELSIF v_feature.status_id = 3/* REJECTED_ID */ THEN
       v_state := T_STATE(0,1,0,1/* PENDING_APPROVAL_ID */,2/* AMEND */);
     ELSIF v_feature.status_id = 2/* DISCARDED_ID */ THEN
@@ -130,7 +130,7 @@ create or replace PACKAGE BODY PKG_FEATURE AS
     
     UPDATE FEATURE
        SET FEATURE.last_record = 0
-     WHERE FEATURE.feature_id = ip_feature.feature_id;
+     WHERE FEATURE.feature_id = v_feature.feature_id;
 	 
   EXCEPTION
 	/* **********************************************
@@ -144,9 +144,10 @@ create or replace PACKAGE BODY PKG_FEATURE AS
   END p_amend;
 
   PROCEDURE p_approve(ip_feature IN T_FEATURE) AS
-  v_feature              T_FEATURE;
-	v_state                T_STATE;
-	v_id_of_last_published NUMBER;
+    v_feature              T_FEATURE;
+    v_state                T_STATE;
+    v_id_of_last_published NUMBER(5);
+    v_id_of_last_pub_status NUMBER(5);
   BEGIN
     SELECT T_FEATURE(FEATURE.feature_id,
                      FEATURE.group_id,
@@ -182,25 +183,42 @@ create or replace PACKAGE BODY PKG_FEATURE AS
      ********************************************** */
     
     IF    v_feature.status_id = 1/* PENDING_APPROVAL_ID */ THEN
-      v_state := T_STATE(1,1,1,4/* APPROVED_ID */,4/* APPROVE */);
+      v_state := T_STATE(1,1,1,4/* APPROVED_ID */,5/* APPROVE */);
     ELSIF v_feature.status_id = 5/* PENDING_DEACTIVATION_ID */ THEN
-      v_state := T_STATE(1,1,1,6/* DEACTIVATED_ID */,4/* APPROVE */);
+      v_state := T_STATE(1,1,1,6/* DEACTIVATED_ID */,5/* APPROVE */);
+    END IF;
+    
+    IF v_feature.was_published = 1 THEN
+      SELECT FEATURE.status_id INTO v_id_of_last_pub_status
+        FROM FEATURE
+       WHERE FEATURE.group_id  = v_feature.group_id
+         AND FEATURE.publish = 1;
+      
+      SELECT FEATURE.feature_id INTO v_id_of_last_published
+        FROM FEATURE
+       WHERE FEATURE.group_id  = v_feature.group_id
+         AND FEATURE.publish = 1
+         AND FEATURE.status_id = v_id_of_last_pub_status;
+      
+      UPDATE FEATURE
+         SET FEATURE.publish = 0
+       WHERE FEATURE.feature_id = v_id_of_last_published;
     END IF;
     
     INSERT INTO FEATURE
     VALUES(seq_feat_feature_id.NEXTVAL,
            v_feature.group_id,
            v_feature.feature_type_id, 
-           COALESCE(ip_feature.feature_value,    v_feature.feature_value), 
-           COALESCE(ip_feature.description,      v_feature.description), 
-           COALESCE(ip_feature.valid_start_date, v_feature.valid_start_date),
+           v_feature.feature_value, 
+           v_feature.description, 
+           v_feature.valid_start_date,
            v_state.status_id,
            v_state.last_action_id,
            v_state.publish,
            v_state.last_record,
            v_feature.linked,
            v_state.was_published,
-           COALESCE(ip_feature.comments,         v_feature.comments),
+           v_feature.comments,
            v_feature.active_flag,
            USER,
            CURRENT_DATE,
@@ -211,36 +229,24 @@ create or replace PACKAGE BODY PKG_FEATURE AS
     
     UPDATE FEATURE
        SET FEATURE.last_record = 0
-     WHERE FEATURE.feature_id = ip_feature.feature_id;
-     
-    IF ip_feature.was_published = 1 THEN
-      SELECT FEATURE.feature_id INTO v_id_of_last_published
-        FROM FEATURE
-       WHERE FEATURE.group_id  = ip_feature.group_id
-         AND FEATURE.publish = 1
-         AND FEATURE.status_id = v_state.status_id;
-      
-      UPDATE FEATURE
-         SET FEATURE.publish = 0
-       WHERE FEATURE.feature_id = v_id_of_last_published;
-    END IF;
+     WHERE FEATURE.feature_id = v_feature.feature_id;
      
   EXCEPTION
 	/* **********************************************
 	 THE PLACE FOR EXCEPTIONS
 	 ********************************************** */
 	WHEN NO_DATA_FOUND THEN
-		RAISE_APPLICATION_ERROR(1/* ERROR CODE */,'NO_DATA_FOUND'/* ERROR TEXT */);
+		RAISE_APPLICATION_ERROR(-20001/* ERROR CODE */,'NO_DATA_FOUND'/* ERROR TEXT */);
 	/* **********************************************
 	 ////////////////////////////////////////////////
 	 ********************************************** */
   END p_approve;
 
   PROCEDURE p_reject(ip_feature IN T_FEATURE) AS
-  v_feature                    T_FEATURE;
-	v_state                      T_STATE;
-	RETURN_TO_THE_LAST_PUBLISHED BOOLEAN DEFAULT FALSE;
-	v_id_of_last_published       NUMBER;
+    v_feature                    T_FEATURE;
+    v_state                      T_STATE;
+    RETURN_TO_THE_LAST_PUBLISHED BOOLEAN DEFAULT FALSE;
+    v_id_of_last_published       NUMBER(5);
   BEGIN
     SELECT T_FEATURE(FEATURE.feature_id,
                      FEATURE.group_id,
@@ -276,22 +282,24 @@ create or replace PACKAGE BODY PKG_FEATURE AS
      ********************************************** */
     
     IF    v_feature.status_id = 1/* PENDING_APPROVAL_ID */ AND v_feature.was_published = 0 THEN
-      v_state := T_STATE(0,1,0,3/* REJECTED_ID */,3/* REJECT */);
+      v_state := T_STATE(0,1,0,3/* REJECTED_ID */,4/* REJECT */);
     ELSIF v_feature.status_id = 1/* PENDING_APPROVAL_ID */ AND v_feature.was_published = 1 THEN
-      v_state := T_STATE(1,1,1,4/* APPROVED_ID */,3/* REJECT */);
+      v_state := T_STATE(1,1,1,4/* APPROVED_ID */,4/* REJECT */);
       RETURN_TO_THE_LAST_PUBLISHED := TRUE;
     END IF;
     
-    IF RETURN_TO_THE_LAST_PUBLISHED THEN
+    IF RETURN_TO_THE_LAST_PUBLISHED THEN     
       SELECT FEATURE.feature_id INTO v_id_of_last_published
         FROM FEATURE
-       WHERE FEATURE.group_id  = ip_feature.group_id
+       WHERE FEATURE.group_id  = v_feature.group_id
          AND FEATURE.publish = 1
          AND FEATURE.status_id = v_state.status_id;
       
       UPDATE FEATURE
          SET FEATURE.last_record = v_state.last_record,
-             FEATURE.last_action_id = v_state.last_action_id
+             FEATURE.last_action_id = v_state.last_action_id,
+             FEATURE.last_modified_by = USER,
+             FEATURE.last_modified_date = CURRENT_DATE
        WHERE FEATURE.feature_id = v_id_of_last_published;
     ELSE
       INSERT INTO FEATURE
@@ -317,23 +325,16 @@ create or replace PACKAGE BODY PKG_FEATURE AS
              v_feature.is_editable);
     END IF;
     
-    IF v_feature.status_id = 4/* APPROVED_ID */ THEN
-      UPDATE FEATURE
-         SET FEATURE.last_record = 0,
-             FEATURE.publish = 0
-       WHERE FEATURE.feature_id = ip_feature.feature_id;
-    ELSE
-      UPDATE FEATURE
-         SET FEATURE.last_record = 0
-       WHERE FEATURE.feature_id = ip_feature.feature_id;
-    END IF;
+    UPDATE FEATURE
+       SET FEATURE.last_record = 0
+     WHERE FEATURE.feature_id = v_feature.feature_id;
      
   EXCEPTION
     /* **********************************************
      THE PLACE FOR EXCEPTIONS
      ********************************************** */
     WHEN NO_DATA_FOUND THEN
-      RAISE_APPLICATION_ERROR(1/* ERROR CODE */,'NO_DATA_FOUND'/* ERROR TEXT */);
+      RAISE_APPLICATION_ERROR(-20001/* ERROR CODE */,'NO_DATA_FOUND'/* ERROR TEXT */);
     /* **********************************************
      ////////////////////////////////////////////////
      ********************************************** */
@@ -343,7 +344,7 @@ create or replace PACKAGE BODY PKG_FEATURE AS
   v_feature                    T_FEATURE;
 	v_state                      T_STATE;
 	RETURN_TO_THE_LAST_PUBLISHED BOOLEAN DEFAULT FALSE;
-	v_id_of_last_published       NUMBER;
+	v_id_of_last_published       NUMBER(5);
   BEGIN
     SELECT T_FEATURE(FEATURE.feature_id,
                      FEATURE.group_id,
@@ -379,27 +380,24 @@ create or replace PACKAGE BODY PKG_FEATURE AS
      ********************************************** */
     
     IF    v_feature.status_id = 1/* PENDING_APPROVAL_ID */ AND v_feature.was_published = 0 THEN
-      v_state := T_STATE(0,1,0,2/* DISCARDED_ID */,2/* DISCARD */);
+      v_state := T_STATE(0,1,0,2/* DISCARDED_ID */,3/* DISCARD */);
     ELSIF v_feature.status_id = 1/* PENDING_APPROVAL_ID */ AND v_feature.was_published = 1 THEN
-      v_state := T_STATE(1,1,1,4/* APPROVED_ID */,2/* DISCARD */);
+      v_state := T_STATE(1,1,1,6/* DEACTIVATED_ID */,3/* DISCARD */);
       RETURN_TO_THE_LAST_PUBLISHED := TRUE;
-    ELSIF v_feature.status_id = 1/* PENDING_APPROVAL_ID */ AND v_feature.was_published = 1 THEN
-      v_state := T_STATE(1,1,1,6/* DEACTIVATED_ID */,6/* DISCARD */);
-      RETURN_TO_THE_LAST_PUBLISHED := TRUE;
-    ELSIF v_feature.status_id = 4/* APPROVED_ID */ THEN
-      v_state := T_STATE(0,1,1,1/* PENDING_APPROVAL_ID */,2/* DISCARD */);
     END IF;
     
     IF RETURN_TO_THE_LAST_PUBLISHED THEN
       SELECT FEATURE.feature_id INTO v_id_of_last_published
         FROM FEATURE
-       WHERE FEATURE.group_id  = ip_feature.group_id
+       WHERE FEATURE.group_id  = v_feature.group_id
          AND FEATURE.publish = 1
          AND FEATURE.status_id = v_state.status_id;
       
       UPDATE FEATURE
          SET FEATURE.last_record = v_state.last_record,
-             FEATURE.last_action_id = v_state.last_action_id
+             FEATURE.last_action_id = v_state.last_action_id,
+             FEATURE.last_modified_by = USER,
+             FEATURE.last_modified_date = CURRENT_DATE
        WHERE FEATURE.feature_id = v_id_of_last_published;
     ELSE
       INSERT INTO FEATURE
@@ -425,23 +423,16 @@ create or replace PACKAGE BODY PKG_FEATURE AS
              v_feature.is_editable);
     END IF;
     
-    IF v_feature.status_id = 4/* APPROVED_ID */ THEN
-      UPDATE FEATURE
-         SET FEATURE.last_record = 0,
-             FEATURE.publish = 0
-       WHERE FEATURE.feature_id = ip_feature.feature_id;
-    ELSE
-      UPDATE FEATURE
-         SET FEATURE.last_record = 0
-       WHERE FEATURE.feature_id = ip_feature.feature_id;
-    END IF;
+    UPDATE FEATURE
+       SET FEATURE.last_record = 0
+     WHERE FEATURE.feature_id = v_feature.feature_id;
      
   EXCEPTION
     /* **********************************************
      THE PLACE FOR EXCEPTIONS
      ********************************************** */
     WHEN NO_DATA_FOUND THEN
-      RAISE_APPLICATION_ERROR(1/* ERROR CODE */,'NO_DATA_FOUND'/* ERROR TEXT */);
+      RAISE_APPLICATION_ERROR(-20001/* ERROR CODE */,'NO_DATA_FOUND'/* ERROR TEXT */);
     /* **********************************************
      ////////////////////////////////////////////////
      ********************************************** */
@@ -484,8 +475,8 @@ create or replace PACKAGE BODY PKG_FEATURE AS
      ////////////////////////////////////////////////
      ********************************************** */
     
-    IF v_feature.status_id = 2/* PENDING_DEACTIVATION_ID */ THEN
-      v_state := T_STATE(1,1,1,6/* DEACTIVATED_ID */,6/* DEACTIVATE */);
+    IF v_feature.status_id = 4/* APPROVED */ THEN
+      v_state := T_STATE(0,1,1,5/* PENDING_DEACTIVATION_ID */,6/* DEACTIVATE */);
     END IF;
     
     INSERT INTO FEATURE
@@ -512,14 +503,14 @@ create or replace PACKAGE BODY PKG_FEATURE AS
     
     UPDATE FEATURE
        SET FEATURE.last_record = 0
-     WHERE FEATURE.feature_id = ip_feature.feature_id;
+     WHERE FEATURE.feature_id = v_feature.feature_id;
      
   EXCEPTION
     /* **********************************************
      THE PLACE FOR EXCEPTIONS
      ********************************************** */
     WHEN NO_DATA_FOUND THEN
-      RAISE_APPLICATION_ERROR(1/* ERROR CODE */,'NO_DATA_FOUND'/* ERROR TEXT */);
+      RAISE_APPLICATION_ERROR(-20001/* ERROR CODE */,'NO_DATA_FOUND'/* ERROR TEXT */);
     /* **********************************************
      ////////////////////////////////////////////////
      ********************************************** */
@@ -563,7 +554,7 @@ create or replace PACKAGE BODY PKG_FEATURE AS
      ********************************************** */
     
     IF v_feature.status_id = 6/* DEACTIVATED_ID */ THEN
-      v_state := T_STATE(0,1,1,2/* PENDING_APPROVAL_ID */,7/* REACTIVATE */);
+      v_state := T_STATE(0,1,1,1/* PENDING_APPROVAL_ID */,7/* REACTIVATE */);
     END IF;
     
     INSERT INTO FEATURE
@@ -590,7 +581,7 @@ create or replace PACKAGE BODY PKG_FEATURE AS
     
     UPDATE FEATURE
        SET FEATURE.last_record = 0
-     WHERE FEATURE.feature_id = ip_feature.feature_id;
+     WHERE FEATURE.feature_id = v_feature.feature_id;
      
   EXCEPTION
     /* **********************************************
